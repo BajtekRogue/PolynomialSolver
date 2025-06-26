@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polynomial System Solver</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax is ready!');
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔢 Polynomial Solver 🔢</h1>
+
+        <div class="form-section">
+            <h3>📝 Input Polynomials</h3>
+            <div class="help-text">
+                Enter multiple polynomials separate lines.
+                Use ^ for exponents.
+            </div>
+            <div class="form-group">
+                <textarea id="polynomial-input" class="polynomial-input-area" oninput="parsePolynomials()"></textarea>
+
+            </div>
+
+            <div class="polynomial-list" id="polynomial-list">
+                <em>No polynomials entered yet...</em>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>⚙️ Field Selection</h3>
+            <div class="form-group">
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="field-q" name="field" value="Q" checked>
+                        <label for="field-q">Rational Field \(\mathbb{Q}\)</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="field-fp" name="field" value="Fp">
+                        <label for="field-fp">Finite Field \(\mathbb{F}_p\)</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="field-r" name="field" value="R">
+                        <label for="field-fp">Real Field \(\mathbb{R}\)</label>
+                    </div>
+                </div>
+                <div id="prime-input" class="prime-input">
+                    <label for="prime">Prime p:</label>
+                    <input type="number" id="prime">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>🎯 Operation</h3>
+            <div class="form-group">
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="op-solve" name="operation" value="solve" checked>
+                        <label for="op-solve">Solve System</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="op-char" name="operation" value="characteristic">
+                        <label for="op-char">Characteristic Equations</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="solve-btn" onclick="solve()">🚀 Compute</button>
+
+        <div id="results" class="results">
+            <div id="results-content"></div>
+        </div>
+    </div>
+    <script>
+        window.MathJaxReady = new Promise((resolve) => {
+            if (window.MathJax) {
+                resolve();
+            } else {
+                window.addEventListener('load', () => {
+                    setTimeout(resolve, 100);
+                });
+            }
+        });
+    </script>
+    <script type="module" src="main.js"></script>
+</body>
+
+</html>

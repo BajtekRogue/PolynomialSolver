@@ -1,0 +1,12 @@
+.vscode
+oldCode
+emsdk
+
+*.exe
+*.dll
+*.so
+*.o
+*.a
+*.out
+*.bin
+*.class
