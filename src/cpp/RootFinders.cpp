@@ -87,7 +87,8 @@ std::vector<GaloisField> findGaloisFieldRoots(const UnivariatePolynomial<GaloisF
     return roots;
 }
 
-Real newton(const UnivariatePolynomial<Real>& f, const UnivariatePolynomial<Real>& df, Real x0) {
+std::pair<Real, bool> newton(const UnivariatePolynomial<Real>& f,
+                             const UnivariatePolynomial<Real>& df, Real x0) {
     Real x = x0;
     const int maxIt = 1'000'000;
 
@@ -95,11 +96,11 @@ Real newton(const UnivariatePolynomial<Real>& f, const UnivariatePolynomial<Real
         Real value = f.evaluate(x);
         Real dvalue = df.evaluate(x);
 
-        if (value == Real(0.0)) {
-            return x;
+        if (value == Real::zero) {
+            return {x, true};
         }
 
-        if (dvalue == Real(0.0)) {
+        if (dvalue == Real::zero) {
             //  Try a small perturbation
             x += Real(Real::epsilon * 1'000);
             continue;
@@ -107,12 +108,12 @@ Real newton(const UnivariatePolynomial<Real>& f, const UnivariatePolynomial<Real
 
         Real xNew = x - value / dvalue;
         if (x == xNew) {
-            return x;
+            return {x, true};
         }
         x = xNew;
     }
 
-    return Real::null;
+    return {x, false};
 }
 
 std::vector<Real> findRealRoots(const UnivariatePolynomial<Real>& f) {
@@ -136,12 +137,30 @@ std::vector<Real> findRealRoots(const UnivariatePolynomial<Real>& f) {
     std::set<Real> potentialRoots;
     UnivariatePolynomial<Real> df = f.derivative();
     for (const Real& guess : initialGuesses) {
-        Real root = newton(f, df, guess);
-        if (root != Real::null) {
+        auto [root, succes] = newton(f, df, guess);
+        if (succes) {
             potentialRoots.insert(root);
         }
     }
 
-    std::vector<Real> roots(potentialRoots.begin(), potentialRoots.end());
-    return roots;
+    //  Cluster roots if there are more than they should
+    std::vector<Real> rawRoots(potentialRoots.begin(), potentialRoots.end());
+    std::sort(rawRoots.begin(), rawRoots.end());
+
+    std::vector<Real> clusteredRoots;
+    Real currentCluster = rawRoots.front();
+
+    for (int i = 1; i < rawRoots.size(); i++) {
+        if (std::abs(rawRoots[i].getValue() - currentCluster.getValue()) <= Real::epsilon * 100) {
+            currentCluster = (currentCluster + rawRoots[i]) / Real(2.0);
+        }
+        else {
+            clusteredRoots.push_back(currentCluster);
+            currentCluster = rawRoots[i];
+        }
+    }
+    clusteredRoots.push_back(currentCluster);
+
+
+    return clusteredRoots;
 }

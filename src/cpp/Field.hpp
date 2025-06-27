@@ -22,7 +22,7 @@ template<typename F> class Field {
 
 public:
     virtual ~Field() = default;
-    
+
     //  Arithmetic operations
     virtual F operator+(const F& other) const = 0;
     virtual F operator-(const F& other) const = 0;
@@ -50,26 +50,18 @@ public:
     //  Assignment operator
     virtual F& operator=(const F& other) = 0;
 
-    //  Field-specific operations
+    //  Utility functions
     virtual F additiveInverse() const = 0;
     virtual F multiplicativeInverse() const = 0;
-
-    //  Identity elements
-    static F zero();
-    static F one();
-
-    //  Utility functions
-    virtual bool isZero() const = 0;
-    virtual bool isOne() const = 0;
     virtual std::string toString() const = 0;
-
-    //  Power operation 
     virtual F power(int64_t exp) const = 0;
-
-    //  Stream output
     friend std::ostream& operator<<(std::ostream& os, const Field& field) {
         return os << field.toString();
     }
+
+    //  Identity elements
+    const static F zero;
+    const static F one;
 
 protected:
     Field() = default;

@@ -11,8 +11,8 @@
 #include <vector>
 
 /**
- * @brief Represents a monomial in a polynomial ring. It is stored as map where each variable has
- * its corresponding exponent.
+ * @brief Monomial is stored as a map where each variable has its corresponding
+ * exponent.
  *
  */
 class Monomial {
@@ -29,9 +29,11 @@ public:
                 throw std::invalid_argument("Invalid exponent: " + std::to_string(exp) +
                                             " for variable '" + std::string(1, var) + "'");
             }
-            _degree += exp;
-            _numVariables++;
-            _monomial[var] = exp;
+            else {
+                _degree += exp;
+                _numVariables++;
+                _monomial[var] = exp;
+            }
         }
     }
 
@@ -40,7 +42,6 @@ public:
 
     explicit Monomial(const std::string& str) : _degree(0), _numVariables(0) {
         if (str.empty()) {
-            _monomial = {};
             return;
         }
 
@@ -48,15 +49,12 @@ public:
         while (it != str.end()) {
             char var = *it;
 
-            if (!((var >= 'A' && var <= 'Z') || (var >= 'a' && var <= 'z'))) {
-                throw std::invalid_argument(
-                    str + " cannot be converted into a Monomial instance [invalid variable]");
+            if (!std::isalpha(static_cast<unsigned char>(var))) {
+                throw std::invalid_argument("Invalid variable");
             }
 
             if (_monomial.count(var)) {
-                throw std::invalid_argument(
-                    str + " cannot be converted into a Monomial instance [duplicate variable: " +
-                    var + "]");
+                throw std::invalid_argument("Duplicate variable: " + var);
             }
 
             ++it;
@@ -69,10 +67,8 @@ public:
             }
 
             char powerSign = *it;
-            if (powerSign != '^' &&
-                !((powerSign >= 'A' && var <= 'Z') || (powerSign >= 'a' && powerSign <= 'z'))) {
-                throw std::invalid_argument(
-                    str + " cannot be converted into a Monomial instance [invalid power sign]");
+            if (powerSign != '^' && !std::isalpha(static_cast<unsigned char>(powerSign))) {
+                throw std::invalid_argument("Invalid variable");
             }
 
             if (powerSign != '^') {
@@ -84,9 +80,7 @@ public:
 
             ++it;
             if (it == str.end()) {
-                throw std::invalid_argument(
-                    str +
-                    " cannot be converted into a Monomial instance [no exponent given after ^]");
+                throw std::invalid_argument("No exponent given after ^");
             }
 
             std::string expStr;
@@ -96,14 +90,12 @@ public:
             }
 
             if (expStr.empty()) {
-                throw std::invalid_argument(
-                    str + " cannot be converted into a Monomial instance [empty exponent]");
+                throw std::invalid_argument("Empty exponent");
             }
 
             int exp = std::stoi(expStr);
             if (exp <= 0) {
-                throw std::invalid_argument(
-                    str + " cannot be converted into a Monomial instance [negative]");
+                throw std::invalid_argument("Negative exponent");
             }
 
             _monomial[var] = exp;
@@ -112,14 +104,7 @@ public:
         }
     }
 
-    Monomial& operator=(const Monomial& other) {
-        if (this != &other) {
-            _monomial = other._monomial;
-            _degree = other._degree;
-            _numVariables = other._numVariables;
-        }
-        return *this;
-    }
+    Monomial& operator=(const Monomial& other) = default;
 
     int getDegree() const {
         return _degree;
@@ -129,23 +114,21 @@ public:
         return _numVariables;
     }
 
-    std::map<char, int> getMonomial() const {
+    const std::map<char, int>& getMonomial() const {
         return _monomial;
     }
 
     std::vector<char> getVariables() const {
-        std::vector<char> variables;
+        std::vector<char> result;
         for (const auto& [var, exp] : _monomial) {
-            variables.push_back(var);
+            result.push_back(var);
         }
-        return variables;
+        return result;
     }
 
     int getExponent(char var) const {
-        if (_monomial.find(var) == _monomial.end()) {
-            return 0;
-        }
-        return _monomial.at(var);
+        auto it = _monomial.find(var);
+        return (it != _monomial.end()) ? it->second : 0;
     }
 
     bool operator==(const Monomial& other) const {
@@ -157,8 +140,8 @@ public:
     }
 
     bool operator<(const Monomial& other) const {
-        if (_degree != other.getDegree()) {
-            return _degree < other.getDegree();
+        if (_degree != other._degree) {
+            return _degree < other._degree;
         }
 
         auto itLeft = _monomial.begin();
@@ -215,42 +198,54 @@ public:
         return Monomial(result);
     }
 
-    Monomial operator*=(const Monomial& other) {
+    Monomial& operator*=(const Monomial& other) {
         for (const auto& [var, exp] : other._monomial) {
             _monomial[var] += exp;
+            _degree += exp;
         }
+        _numVariables = _monomial.size();
         return *this;
     }
 
     Monomial operator/(const Monomial& other) const {
         std::map<char, int> result = _monomial;
         for (const auto& [var, exp] : other._monomial) {
-            result[var] -= exp;
-            if (result[var] < 0) {
+
+            auto it = result.find(var);
+            if (it == result.end() || it->second < exp) {
                 return Monomial::null;
             }
-            else if (result[var] == 0) {
-                result.erase(var);
+
+            it->second -= exp;
+            if (it->second == 0) {
+                result.erase(it);
             }
         }
+
         return Monomial(result);
     }
 
-    Monomial operator/=(const Monomial& other) {
+    Monomial& operator/=(const Monomial& other) {
         for (const auto& [var, exp] : other._monomial) {
-            _monomial[var] -= exp;
-            if (_monomial[var] < 0) {
-                return Monomial::null;
+
+            auto it = _monomial.find(var);
+            if (it == _monomial.end() || it->second < exp) {
+                *this = Monomial::null;
+                return *this;
             }
-            else if (_monomial[var] == 0) {
-                _monomial.erase(var);
+
+            it->second -= exp;
+            _degree -= exp;
+            if (it->second == 0) {
+                _monomial.erase(it);
+                _numVariables--;
             }
         }
         return *this;
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Monomial& monomial) {
-        if (monomial.getDegree() == 0) {
+        if (monomial._degree == 0) {
             os << "1"; //  Empty monomial is equivalent to "1"
             return os;
         }
@@ -278,11 +273,11 @@ public:
     }
 
     /**
-     * Returns true iff `a` is divisible by `b` so that `a / b` wouldn't throw an exception
+     * Returns true iff `a` is divisible by `b` so that `a / b` is still a monomial
      */
-     inline static bool divides(const Monomial& a, const Monomial& b) {
+    inline static bool divides(const Monomial& a, const Monomial& b) {
         for (const auto& [var, exp] : b.getMonomial()) {
-            if (a.getExponent(var) - exp < 0) {
+            if (a.getExponent(var) < exp) {
                 return false;
             }
         }

@@ -3,6 +3,7 @@
 
 #include "GaloisField.hpp"
 #include "GroebnerBasis.hpp"
+#include "Logger.hpp"
 #include "Monomial.hpp"
 #include "MonomialOrders.hpp"
 #include "MultivariatePolynomial.hpp"
@@ -25,7 +26,7 @@ UnivariatePolynomial<F> fromMultivariateToUnivariate(const MultivariatePolynomia
         throw std::runtime_error(f.toString() + " is not univariate");
     }
 
-    char var = f_vars.back();
+    char var = f_vars.front();
     int degree = f.totalDegree();
 
     std::vector<F> result(degree + 1);
@@ -40,7 +41,7 @@ UnivariatePolynomial<F> fromMultivariateToUnivariate(const MultivariatePolynomia
 
 /**
  * @brief For a system of polynomial equations `X`, returns the characteristic equations that each
- * variable must satisfy. If the system has no solutions returns the empty map. Requires many
+ * variable must satisfy. If the system has no solutions returns the empty map. Requires `|X|`
  * calculations of Groebner basis.
  */
 template<typename F>
@@ -74,7 +75,7 @@ std::map<char, MultivariatePolynomial<F>>
 
         for (const MultivariatePolynomial<F>& g : G) {
             std::vector<char> g_vars = g.getVariables();
-            if (g_vars.size() == 1 && g_vars.back() == var) {
+            if (g_vars.size() == 1 && g_vars.front() == var) {
                 H.push_back(g);
             }
         }
@@ -82,9 +83,7 @@ std::map<char, MultivariatePolynomial<F>>
         if (H.size() != 1) {
             return {};
         }
-        else {
-            result[var] = H.front();
-        }
+        result[var] = H.front();
     }
 
     return result;
@@ -93,12 +92,97 @@ std::map<char, MultivariatePolynomial<F>>
 /**
  * @brief Helper function to solve system of polynomial equations
  */
+//  template<typename F>
+//  std::variant<std::string, std::vector<std::map<char, F>>>
+//      recursiveSolver(const std::vector<MultivariatePolynomial<F>>& X,
+//                      std::function<std::vector<F>(const UnivariatePolynomial<F>&)> rootFinder) {
+
+//  if (X.empty()) {
+//      return {};
+//  }
+
+//  std::vector<MultivariatePolynomial<F>> univaratePolynomials;
+//  std::vector<MultivariatePolynomial<F>> constantPolynomials;
+
+//  for (const MultivariatePolynomial<F>& f : X) {
+//      std::vector<char> f_vars = f.getVariables();
+//      if (f_vars.size() == 1) {
+//          univaratePolynomials.push_back(f);
+//      }
+//      else if (f_vars.size() == 0 && !f.isZeroPolynomial()) {
+//          constantPolynomials.push_back(f);
+//      }
+//  }
+
+//  if (!constantPolynomials.empty()) {
+//      return "No solutions found";
+//  }
+//  else if (univaratePolynomials.empty()) {
+//      return "There are infinitely many solutions";
+//  }
+
+//  MultivariatePolynomial<F> f = univaratePolynomials.front();
+//  char var = f.getVariables().front();
+//  univaratePolynomials.erase(univaratePolynomials.begin());
+//  std::vector<F> rootsFound = rootFinder(fromMultivariateToUnivariate(f));
+//  std::cout << "roots for f = " << f << "\n";
+//  if (rootsFound.empty()) {
+//      return "No solutions found";
+//  }
+
+//  std::vector<std::map<char, F>> solutions;
+
+//  for (F root : rootsFound) {
+//      std::map<char, F> currentSolution = {
+//          {var, root}
+//      };
+//      std::vector<MultivariatePolynomial<F>> G;
+//      for (const MultivariatePolynomial<F>& f : X) {
+//          MultivariatePolynomial<F> g = f.substitute(var, root);
+//          if (!g.isZeroPolynomial()) {
+//              G.push_back(g);
+//          }
+//      }
+
+
+//  if (G.empty()) {
+//      solutions.push_back(currentSolution);
+//  }
+//  else {
+//      std::variant<std::string, std::vector<std::map<char, F>>> extendedSolution =
+//          recursiveSolver(G, rootFinder);
+
+//  if (std::holds_alternative<std::string>(extendedSolution)) {
+//      return std::get<std::string>(extendedSolution);
+//  }
+
+//  std::vector<std::map<char, F>> extendedSolutions =
+//      std::get<std::vector<std::map<char, F>>>(extendedSolution);
+
+//  for (const std::map<char, F>& sol : extendedSolutions) {
+//      std::map<char, F> fullSolution = currentSolution;
+//      fullSolution.insert(sol.begin(), sol.end());
+//      solutions.push_back(fullSolution);
+//  }
+//  }
+//  }
+
+//  return solutions;
+//  }
+
 template<typename F>
 std::variant<std::string, std::vector<std::map<char, F>>>
     recursiveSolver(const std::vector<MultivariatePolynomial<F>>& X,
                     std::function<std::vector<F>(const UnivariatePolynomial<F>&)> rootFinder) {
+    Logger::log("🌀 === recursiveSolver CALLED ===");
+    Logger::log("📦 Input size: " + std::to_string(X.size()));
+
+    for (size_t i = 0; i < X.size(); ++i) {
+        Logger::log("🔢 X[" + std::to_string(i) + "] = " + X[i].toString());
+    }
 
     if (X.empty()) {
+        Logger::log("⚠️  Empty system. Returning empty solution.");
         return {};
     }
 
@@ -107,54 +191,88 @@ std::variant<std::string, std::vector<std::map<char, F>>>
 
     for (const MultivariatePolynomial<F>& f : X) {
         std::vector<char> f_vars = f.getVariables();
+        Logger::log("🔍 Analyzing polynomial: " + f.toString());
+
+        std::string varStr = "🔤 Variables: ";
+        for (char c : f_vars) {
+            varStr += c;
+        }
+        Logger::log(varStr);
+
         if (f_vars.size() == 1) {
+            Logger::log("✅ Univariate polynomial detected.");
             univaratePolynomials.push_back(f);
         }
-        else if (f_vars.size() == 0 && !f.isZeroPolynomial()) {
+        else if (f_vars.empty() && !f.isZeroPolynomial()) {
+            Logger::log("❌ Constant non-zero polynomial found! System is inconsistent.");
             constantPolynomials.push_back(f);
         }
     }
 
     if (!constantPolynomials.empty()) {
+        Logger::log("❌ Returning: No solutions found");
         return "No solutions found";
     }
     else if (univaratePolynomials.empty()) {
+        Logger::log("♾️ No univariate polynomials left. Returning: Infinitely many solutions");
         return "There are infinitely many solutions";
     }
 
     MultivariatePolynomial<F> f = univaratePolynomials.front();
     char var = f.getVariables().front();
+    Logger::log("🎯 Selected univariate polynomial f = " + f.toString());
+    Logger::log("📌 Variable selected: " + std::string(1, var));
+
     univaratePolynomials.erase(univaratePolynomials.begin());
     std::vector<F> rootsFound = rootFinder(fromMultivariateToUnivariate(f));
-    std::cout << "roots for f = " << f << "\n";
+
+    std::string rootsStr = "🌱 Roots found: ";
+    for (const F& r : rootsFound) {
+        rootsStr += r.toString() + " ";
+    }
+    Logger::log(rootsStr);
+
     if (rootsFound.empty()) {
+        Logger::log("❌ No roots found. Returning: No solutions found");
         return "No solutions found";
     }
 
     std::vector<std::map<char, F>> solutions;
 
-    for (F root : rootsFound) {
+    for (const F& root : rootsFound) {
+        Logger::log("🧪 Trying root: " + root.toString() + " for variable " + var);
+
         std::map<char, F> currentSolution = {
             {var, root}
         };
+
         std::vector<MultivariatePolynomial<F>> G;
-        std::cout << "root = " << root << "\n";
+        Logger::log("📉 Substituting " + std::string(1, var) + " = " + root.toString() +
+                    " into all polynomials...");
         for (const MultivariatePolynomial<F>& f : X) {
             MultivariatePolynomial<F> g = f.substitute(var, root);
+            Logger::log("🔁 " + f.toString() + " → " + g.toString());
             if (!g.isZeroPolynomial()) {
                 G.push_back(g);
             }
+            else {
+                Logger::log("🌟 Resulting polynomial is zero, skipping.");
+            }
         }
 
-
         if (G.empty()) {
+            Logger::log(
+                "✅ All polynomials vanished after substitution. Partial solution accepted.");
             solutions.push_back(currentSolution);
         }
         else {
-            std::variant<std::string, std::vector<std::map<char, F>>> extendedSolution =
-                recursiveSolver(G, rootFinder);
+            Logger::log("🔁 Recursively solving remaining system of size " +
+                        std::to_string(G.size()));
+            auto extendedSolution = recursiveSolver(G, rootFinder);
 
             if (std::holds_alternative<std::string>(extendedSolution)) {
+                Logger::log("⚠️ Recursive call returned a string: " +
+                            std::get<std::string>(extendedSolution));
                 return std::get<std::string>(extendedSolution);
             }
 
@@ -164,11 +282,18 @@ std::variant<std::string, std::vector<std::map<char, F>>>
             for (const std::map<char, F>& sol : extendedSolutions) {
                 std::map<char, F> fullSolution = currentSolution;
                 fullSolution.insert(sol.begin(), sol.end());
+
+                std::string solStr = "🔗 Merged solution: ";
+                for (const auto& [k, v] : fullSolution) {
+                    solStr += std::string(1, k) + " = " + v.toString() + ", ";
+                }
+                Logger::log(solStr);
                 solutions.push_back(fullSolution);
             }
         }
     }
 
+    Logger::log("🧾 Returning " + std::to_string(solutions.size()) + " solution(s)");
     return solutions;
 }
 
@@ -195,7 +320,7 @@ std::variant<std::string, std::vector<std::map<char, F>>>
 
     //  Hilbert Nullstellensatz
     std::vector<MultivariatePolynomial<F>> G = calculateGroebnerBasis(X, LexOrder(variables));
-    if (G.size() == 1 && G.front() == F::one()) {
+    if (G.size() == 1 && G.front() == F::one) {
         return "No solution exist in any field extension";
     }
     return recursiveSolver(G, rootFinder);

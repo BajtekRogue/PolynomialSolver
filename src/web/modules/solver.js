@@ -241,17 +241,6 @@ function displayResults(calculationResult, operation, polynomials) {
     const fieldLatex = getFieldLatex(calculationResult.field, calculationResult.prime);
     result += `<p><strong>Field:</strong> ${fieldLatex}</p>`;
     result += `<p><strong>Operation:</strong> ${operation === 'solve' ? 'Solve System' : 'Characteristic Equations'}</p>`;
-    
-    const polynomialText = calculationResult.systemSize === 1 ? 'polynomial' : 'polynomials';
-    const variableText = calculationResult.variableCount === 1 ? 'variable' : 'variables';
-    
-    result += `<p><strong>System size:</strong> ${calculationResult.systemSize} ${polynomialText}`;
-    if (calculationResult.variableCount !== undefined) {
-        result += `, ${calculationResult.variableCount} ${variableText}`;
-        if (calculationResult.variables && calculationResult.variables.length > 0) {
-            result += ` ${calculationResult.variables.join(', ')}`;
-        }
-    }
     result += '</p>';
     result += '</div>';
     result += '<div class="result-section">';

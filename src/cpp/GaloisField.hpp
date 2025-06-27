@@ -26,13 +26,11 @@ public:
             _value = _normalize(std::stoll(str, &pos));
 
             if (pos != str.size()) {
-                throw std::invalid_argument(
-                    str + " cannot be converted into a GaloisField instance [not an integer]");
+                throw std::invalid_argument("Not an integer");
             }
         }
         catch (const std::exception& e) {
-            throw std::invalid_argument(
-                str + " cannot be converted into a GaloisField instance [not an integer]");
+            throw std::invalid_argument("Not an integer");
         }
     }
 
@@ -128,22 +126,6 @@ public:
         return GaloisField(_modInverse(_value, prime));
     }
 
-    static GaloisField zero() {
-        return GaloisField(0);
-    }
-
-    static GaloisField one() {
-        return GaloisField(1);
-    }
-
-    bool isZero() const override {
-        return _value == 0;
-    }
-
-    bool isOne() const override {
-        return _value == 1;
-    }
-
     std::string toString() const override {
         std::ostringstream oss;
         oss << _value;
@@ -152,7 +134,7 @@ public:
 
     GaloisField power(int64_t exp) const override {
         if (exp == 0) {
-            return one();
+            return one;
         }
         if (exp < 0) {
             return multiplicativeInverse().power(-exp);
@@ -188,6 +170,9 @@ public:
     }
 
     static int64_t prime;
+
+    const static GaloisField zero;
+    const static GaloisField one;
 
 private:
     int64_t _value;

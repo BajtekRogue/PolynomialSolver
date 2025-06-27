@@ -22,7 +22,8 @@ protected:
         std::vector<Rational> coeffs4 = {Rational(1, 2), Rational(1, 3)};
         p4 = UnivariatePolynomial<Rational>(coeffs4);
 
-        std::vector<Rational> coeffs5 = {Rational(5), Rational(7), Rational(0) , Rational(-1), Rational(2)};
+        std::vector<Rational> coeffs5 = {Rational(5), Rational(7), Rational(0), Rational(-1),
+                                         Rational(2)};
         p5 = UnivariatePolynomial<Rational>(coeffs5);
     }
 
@@ -37,13 +38,13 @@ protected:
 
 TEST_F(UnivariatePolynomialTest, DefaultConstructor) {
     UnivariatePolynomial<Rational> p;
-    EXPECT_TRUE(p.isZero());
+    EXPECT_TRUE(p.isZeroPolynomial());
     EXPECT_EQ(p.degree(), 0);
 }
 
 TEST_F(UnivariatePolynomialTest, ConstantConstructor) {
     UnivariatePolynomial<Rational> p(Rational(5));
-    EXPECT_FALSE(p.isZero());
+    EXPECT_FALSE(p.isZeroPolynomial());
     EXPECT_TRUE(p.isConstant());
     EXPECT_EQ(p.degree(), 0);
     EXPECT_EQ(p[0], Rational(5));
@@ -61,7 +62,7 @@ TEST_F(UnivariatePolynomialTest, VectorConstructor) {
 TEST_F(UnivariatePolynomialTest, EmptyVectorConstructor) {
     std::vector<Rational> empty_coeffs;
     UnivariatePolynomial<Rational> p(empty_coeffs);
-    EXPECT_TRUE(p.isZero());
+    EXPECT_TRUE(p.isZeroPolynomial());
     EXPECT_EQ(p.degree(), 0);
 }
 
@@ -142,7 +143,7 @@ TEST_F(UnivariatePolynomialTest, SubtractionWithZero) {
 
 TEST_F(UnivariatePolynomialTest, SubtractionWithSelf) {
     UnivariatePolynomial<Rational> result = p1 - p1;
-    EXPECT_TRUE(result.isZero());
+    EXPECT_TRUE(result.isZeroPolynomial());
 }
 
 TEST_F(UnivariatePolynomialTest, SubtractionWithScalar) {
@@ -163,7 +164,7 @@ TEST_F(UnivariatePolynomialTest, MultiplicationBasic) {
 
 TEST_F(UnivariatePolynomialTest, MultiplicationWithZero) {
     UnivariatePolynomial<Rational> result = p1 * zeroPoly;
-    EXPECT_TRUE(result.isZero());
+    EXPECT_TRUE(result.isZeroPolynomial());
 }
 
 TEST_F(UnivariatePolynomialTest, MultiplicationWithOne) {
@@ -221,7 +222,7 @@ TEST_F(UnivariatePolynomialTest, PolynomialModulo) {
     UnivariatePolynomial<Rational> divisor(coeffsDivisor);
 
     UnivariatePolynomial<Rational> remainder = dividend % divisor;
-    EXPECT_TRUE(remainder.isZero());
+    EXPECT_TRUE(remainder.isZeroPolynomial());
 }
 
 TEST_F(UnivariatePolynomialTest, DivisionByZeroPolynomial) {
@@ -253,8 +254,8 @@ TEST_F(UnivariatePolynomialTest, InequalityOperator) {
 }
 
 TEST_F(UnivariatePolynomialTest, IsZero) {
-    EXPECT_TRUE(zeroPoly.isZero());
-    EXPECT_FALSE(p1.isZero());
+    EXPECT_TRUE(zeroPoly.isZeroPolynomial());
+    EXPECT_FALSE(p1.isZeroPolynomial());
 }
 
 TEST_F(UnivariatePolynomialTest, IsConstant) {
@@ -285,8 +286,7 @@ TEST_F(UnivariatePolynomialTest, String) {
 }
 
 TEST_F(UnivariatePolynomialTest, Derivative) {
-    std::vector<Rational> coeffsq = {Rational(7), Rational(0), Rational(-3),
-                                     Rational(8)};
+    std::vector<Rational> coeffsq = {Rational(7), Rational(0), Rational(-3), Rational(8)};
     auto q = UnivariatePolynomial<Rational>(coeffsq);
     EXPECT_EQ(q, p5.derivative());
 }

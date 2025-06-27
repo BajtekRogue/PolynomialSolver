@@ -35,8 +35,7 @@ public:
                 _denominator = 1;
 
                 if (pos != str.size()) {
-                    throw std::invalid_argument(
-                        str + " cannot be converted into a Rational instance [not an integer]");
+                    throw std::invalid_argument("Not an integer");
                 }
             }
             else {
@@ -45,21 +44,17 @@ public:
 
                 //  Denominator must be positive and without + sign
                 if (denominatorStr[0] == '+' || denominatorStr[0] == '-') {
-                    throw std::invalid_argument(str + " cannot be converted into a Rational "
-                                                      "instance [denomiantor contains + or -]");
+                    throw std::invalid_argument("Denomiantor contains + or -");
                 }
 
                 _numerator = std::stoll(numeratorStr, &pos);
                 if (pos != numeratorStr.size()) {
-                    throw std::invalid_argument(
-                        str +
-                        " cannot be converted into a Rational instance [numerator not an integer]");
+                    throw std::invalid_argument("Numerator not an integer]");
                 }
 
                 _denominator = std::stoll(denominatorStr, &pos);
                 if (pos != denominatorStr.size()) {
-                    throw std::invalid_argument(str + " cannot be converted into a Rational "
-                                                      "instance [denominator not an integer]");
+                    throw std::invalid_argument("Denominator not an integer");
                 }
 
                 if (_denominator == 0) {
@@ -71,8 +66,7 @@ public:
 
 
         catch (const std::exception& e) {
-            throw std::invalid_argument(
-                str + " cannot be converted into a Rational instance [not an integer]");
+            throw std::invalid_argument("Not an integer]");
         }
     }
 
@@ -152,7 +146,7 @@ public:
     }
 
     bool operator<(const Rational& other) const override {
-        return _numerator *other._denominator < _denominator * other._numerator;
+        return _numerator * other._denominator < _denominator * other._numerator;
     }
 
     bool operator<=(const Rational& other) const override {
@@ -181,22 +175,6 @@ public:
 
     Rational multiplicativeInverse() const override {
         return reciprocal();
-    }
-
-    static Rational zero() {
-        return Rational(0, 1);
-    }
-
-    static Rational one() {
-        return Rational(1, 1);
-    }
-
-    bool isZero() const override {
-        return _numerator == 0;
-    }
-
-    bool isOne() const override {
-        return _numerator == 1 && _denominator == 1;
     }
 
     std::string toString() const override {
@@ -316,7 +294,6 @@ public:
         return r != other;
     }
 
-
     friend bool operator<(int64_t other, const Rational& r) {
         return Rational(other) < r;
     }
@@ -324,7 +301,6 @@ public:
     bool operator<(int64_t other) const {
         return _numerator < other * _denominator;
     }
-
 
     bool operator>(int64_t other) const {
         return other < *this;
@@ -334,7 +310,6 @@ public:
         return r < other;
     }
 
-
     bool operator<=(int64_t other) const {
         return !(*this > other);
     }
@@ -342,7 +317,6 @@ public:
     friend bool operator<=(int64_t other, const Rational& r) {
         return !(other > r);
     }
-
 
     bool operator>=(int64_t other) const {
         return !(*this < other);
@@ -390,6 +364,9 @@ public:
     bool isInteger() const {
         return _denominator == 1;
     }
+
+    const static Rational zero;
+    const static Rational one;
 
 private:
     int64_t _numerator;

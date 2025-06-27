@@ -35,20 +35,20 @@ std::pair<std::vector<MultivariatePolynomial<F>>, MultivariatePolynomial<F>>
 
             //  Check if something divides the leading term of p
             Monomial divisionMonomial = p_leadingMonomial / g_leadingMonomial;
-            if (divisionMonomial != Monomial::null) {
-
-                Monomial divisionMonomial = p_leadingMonomial / g_leadingMonomial;
-                F divisionCoefficient = p_leadingCoefficient / g_leadingCoefficient;
-                MultivariatePolynomial<F> divisionMonomialPolynomial({
-                    {divisionMonomial, divisionCoefficient}
-                });
-                
-                p -= divisionMonomialPolynomial * g;
-                Q[i] += divisionMonomialPolynomial;
-                somethingDivided = true;
-
-                break;
+            if (divisionMonomial == Monomial::null) {
+                continue; //  Didn't divide
             }
+
+            F divisionCoefficient = p_leadingCoefficient / g_leadingCoefficient;
+            MultivariatePolynomial<F> divisionMonomialPolynomial({
+                {divisionMonomial, divisionCoefficient}
+            });
+
+            p -= divisionMonomialPolynomial * g;
+            Q[i] += divisionMonomialPolynomial;
+            somethingDivided = true;
+
+            break;
         }
 
         //  Nothing divided so reduce p and update r
@@ -79,10 +79,10 @@ MultivariatePolynomial<F> syzygy(const MultivariatePolynomial<F>& f,
 
     Monomial lcm = Monomial::lcm(f_leadingMonomial, g_leadingMonomial);
     MultivariatePolynomial<F> u({
-        {lcm / f_leadingMonomial, F(1) / f_leadingCoefficient}
+        {lcm / f_leadingMonomial, F::one / f_leadingCoefficient}
     });
     MultivariatePolynomial<F> v({
-        {lcm / g_leadingMonomial, F(1) / g_leadingCoefficient}
+        {lcm / g_leadingMonomial, F::one / g_leadingCoefficient}
     });
 
     return u * f - v * g;
@@ -101,7 +101,7 @@ inline bool lcmCriterion(const Monomial& a, const Monomial& b) {
  * is a third monomial that divides the lcm of the two monomials
  */
 inline bool chainCriterion(const Monomial& a, const Monomial& b,
-                    const std::vector<Monomial>& remainingMonomials) {
+                           const std::vector<Monomial>& remainingMonomials) {
     for (const Monomial& monomial : remainingMonomials) {
         if (Monomial::divides(Monomial::lcm(a, b), monomial)) {
             return true;
@@ -163,15 +163,12 @@ std::vector<MultivariatePolynomial<F>>
         if (!somethingAdded) {
             return H;
         }
-        else {
-            G = H;
-        }
+        G = std::move(H);
     }
 }
 
 /**
  * @brief Reduces a Groebner basis
-
  */
 template<typename F>
 std::vector<MultivariatePolynomial<F>>
@@ -206,12 +203,12 @@ std::vector<MultivariatePolynomial<F>>
     }
 
     const int currentSize = H.size();
-    bool somethingReduced = false;
+    bool somethingReduced = true;
 
     //  Second pass: Perform reductions
-    while (!somethingReduced) {
+    while (somethingReduced) {
 
-        somethingReduced = true;
+        somethingReduced = false;
         //  Reduce each polynomial in the basis by the others to simplify it
         for (int i = 0; i < currentSize; i++) {
 
@@ -221,7 +218,7 @@ std::vector<MultivariatePolynomial<F>>
 
             if (!r.isZeroPolynomial() && H[i] != r) {
                 H[i] = r;
-                somethingReduced = false;
+                somethingReduced = true;
             }
         }
     }
@@ -230,7 +227,7 @@ std::vector<MultivariatePolynomial<F>>
     if (normalizedCoefficients) {
         for (MultivariatePolynomial<F>& h : H) {
             F leadingCoefficient = h.leadingCoefficient(order);
-            h *= F::one() / leadingCoefficient;
+            h *= F::one / leadingCoefficient;
         }
     }
 

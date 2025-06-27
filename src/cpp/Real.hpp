@@ -3,10 +3,10 @@
 
 #include "Field.hpp"
 
+#include <charconv>
 #include <cmath>
 #include <sstream>
 #include <stdexcept>
-#include <charconv>
 
 class Real : public Field<Real> {
 public:
@@ -16,18 +16,16 @@ public:
 
     Real(const std::string& str) {
         try {
-            size_t idx;
-            _value = std::stod(str, &idx);
-            if (idx != str.size()) {
+            size_t pos;
+            _value = std::stod(str, &pos);
+            if (pos != str.size()) {
                 throw std::invalid_argument("");
             }
         }
         catch (const std::exception& e) {
-            throw std::invalid_argument(str +
-                                        " cannot be converted into a Real instance [not a float]");
+            throw std::invalid_argument("Not a float");
         }
     }
-
 
     Real operator+(const Real& other) const override {
         return Real(_value + other._value);
@@ -42,7 +40,7 @@ public:
     }
 
     Real operator/(const Real& other) const override {
-        if (other.isZero()) {
+        if (other == Real::zero) {
             throw std::domain_error("Division by zero");
         }
         return Real(_value / other._value);
@@ -64,7 +62,7 @@ public:
     }
 
     Real& operator/=(const Real& other) override {
-        if (other.isZero()) {
+        if (other == Real::zero) {
             throw std::domain_error("Division by zero");
         }
         _value /= other._value;
@@ -113,29 +111,25 @@ public:
     }
 
     Real multiplicativeInverse() const override {
-        if (isZero()) {
+        if (std::abs(_value) < Real::epsilon) {
             throw std::domain_error("Zero has no multiplicative inverse");
         }
         return Real(1.0 / _value);
     }
 
-    static Real zero() {
-        return Real(0.0);
-    }
-
-    static Real one() {
-        return Real(1.0);
-    }
-
-    bool isZero() const override {
-        return std::abs(_value) < Real::epsilon;
-    }
-
-    bool isOne() const override {
-        return std::abs(_value - 1.0) < Real::epsilon;
-    }
-
     std::string toString() const override {
+        if (std::abs(_value) < Real::epsilon) {
+            return "0";
+        }
+
+        //  Check if value is close to an integer
+        double rounded = std::round(_value);
+        if (std::abs(_value - rounded) < Real::epsilon) {
+            std::ostringstream oss;
+            oss << static_cast<int64_t>(rounded);
+            return oss.str();
+        }
+
         std::ostringstream oss;
         oss.precision(12);
         oss << _value;
@@ -146,7 +140,7 @@ public:
         return Real(std::pow(_value, static_cast<double>(exp)));
     }
 
-	double getValue() {
+    double getValue() {
         return _value;
     }
 
@@ -155,7 +149,9 @@ public:
     }
 
     static double epsilon;
-    const static Real null;
+
+    const static Real zero;
+    const static Real one;
 
 private:
     double _value;

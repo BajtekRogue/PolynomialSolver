@@ -19,7 +19,7 @@ template<typename F> class UnivariatePolynomial {
     static_assert(std::is_base_of_v<Field<F>, F>, "F must be derived from Field<F>");
 
 public:
-    UnivariatePolynomial() : _coefficients{F::zero()} { }
+    UnivariatePolynomial() : _coefficients{F::zero} { }
 
     explicit UnivariatePolynomial(const F& constant) : _coefficients{constant} {
         _removeLeadingZeros();
@@ -27,14 +27,14 @@ public:
 
     explicit UnivariatePolynomial(const std::vector<F>& coeffs) : _coefficients(coeffs) {
         if (_coefficients.empty()) {
-            _coefficients.push_back(F::zero());
+            _coefficients.push_back(F::zero);
         }
         _removeLeadingZeros();
     }
 
     explicit UnivariatePolynomial(std::vector<F>&& coeffs) : _coefficients(std::move(coeffs)) {
         if (_coefficients.empty()) {
-            _coefficients.push_back(F::zero());
+            _coefficients.push_back(F::zero);
         }
         _removeLeadingZeros();
     }
@@ -63,16 +63,12 @@ public:
     }
 
     const F& operator[](int index) const {
-        if (index >= _coefficients.size()) {
-            static F zero_element = F::zero();
-            return zero_element;
-        }
-        return _coefficients[index];
+        return index >= _coefficients.size() ? F::zero : _coefficients[index];
     }
 
     F& operator[](int index) {
         if (index >= _coefficients.size()) {
-            _coefficients.resize(index + 1, F::zero());
+            _coefficients.resize(index + 1, F::zero);
         }
         return _coefficients[index];
     }
@@ -90,13 +86,25 @@ public:
     }
 
     UnivariatePolynomial operator+(const UnivariatePolynomial& other) const {
-        int maxSize = std::max(_coefficients.size(), other._coefficients.size());
-        std::vector<F> result(maxSize, F::zero());
+        const int thisSize = _coefficients.size();
+        const int otherSize = other._coefficients.size();
+        const int maxSize = std::max(thisSize, otherSize);
+        std::vector<F> result(maxSize);
 
-        for (int i = 0; i < maxSize; i++) {
-            F a = i < _coefficients.size() ? _coefficients[i] : F::zero();
-            F b = i < other._coefficients.size() ? other._coefficients[i] : F::zero();
-            result[i] = a + b;
+        //  Process common indices
+        const int minSize = std::min(thisSize, otherSize);
+        for (int i = 0; i < minSize; i++) {
+            result[i] = _coefficients[i] + other._coefficients[i];
+        }
+
+        //  Copy remaining coefficients from the longer polynomial
+        if (thisSize > minSize) {
+            std::copy(_coefficients.begin() + minSize, _coefficients.end(),
+                      result.begin() + minSize);
+        }
+        else if (otherSize > minSize) {
+            std::copy(other._coefficients.begin() + minSize, other._coefficients.end(),
+                      result.begin() + minSize);
         }
 
         return UnivariatePolynomial(std::move(result));
@@ -104,7 +112,7 @@ public:
 
     UnivariatePolynomial operator+(const F& scalar) const {
         UnivariatePolynomial result = *this;
-        result._coefficients[0] = result._coefficients[0] + scalar;
+        result._coefficients.front() = result._coefficients.front() + scalar;
         result._removeLeadingZeros();
         return result;
     }
@@ -114,11 +122,22 @@ public:
     }
 
     UnivariatePolynomial& operator+=(const UnivariatePolynomial& other) {
-        int maxSize = std::max(_coefficients.size(), other._coefficients.size());
-        _coefficients.resize(maxSize, F::zero());
+        const int thisSize = _coefficients.size();
+        const int otherSize = other._coefficients.size();
 
-        for (int i = 0; i < other._coefficients.size(); i++) {
+        if (otherSize > thisSize) {
+            _coefficients.resize(otherSize, F::zero);
+        }
+
+        const int minSize = std::min(thisSize, otherSize);
+        for (int i = 0; i < minSize; i++) {
             _coefficients[i] += other._coefficients[i];
+        }
+
+        //  Copy remaining coefficients if other is longer
+        if (otherSize > thisSize) {
+            std::copy(other._coefficients.begin() + thisSize, other._coefficients.end(),
+                      _coefficients.begin() + thisSize);
         }
 
         _removeLeadingZeros();
@@ -132,13 +151,26 @@ public:
     }
 
     UnivariatePolynomial operator-(const UnivariatePolynomial& other) const {
-        int maxSize = std::max(_coefficients.size(), other._coefficients.size());
-        std::vector<F> result(maxSize, F::zero());
+        const int thisSize = _coefficients.size();
+        const int otherSize = other._coefficients.size();
+        const int maxSize = std::max(thisSize, otherSize);
+        std::vector<F> result(maxSize);
 
-        for (int i = 0; i < maxSize; i++) {
-            F a = i < _coefficients.size() ? _coefficients[i] : F::zero();
-            F b = i < other._coefficients.size() ? other._coefficients[i] : F::zero();
-            result[i] = a - b;
+        //  Process common indices
+        const int minSize = std::min(thisSize, otherSize);
+        for (int i = 0; i < minSize; i++) {
+            result[i] = _coefficients[i] - other._coefficients[i];
+        }
+
+        //  Handle remaining coefficients
+        if (thisSize > minSize) {
+            std::copy(_coefficients.begin() + minSize, _coefficients.end(),
+                      result.begin() + minSize);
+        }
+        else if (otherSize > minSize) {
+            for (int i = minSize; i < otherSize; i++) {
+                result[i] = -other._coefficients[i];
+            }
         }
 
         return UnivariatePolynomial(std::move(result));
@@ -146,24 +178,34 @@ public:
 
     UnivariatePolynomial operator-(const F& scalar) const {
         UnivariatePolynomial result = *this;
-        result._coefficients[0] = result._coefficients[0] - scalar;
+        result._coefficients.front() = result._coefficients.front() - scalar;
         result._removeLeadingZeros();
         return result;
     }
 
     friend UnivariatePolynomial operator-(const F& scalar, const UnivariatePolynomial& poly) {
         UnivariatePolynomial result = -poly;
-        result._coefficients[0] = result._coefficients[0] + scalar;
+        result._coefficients.front() = result._coefficients.front() + scalar;
         result._removeLeadingZeros();
         return result;
     }
 
     UnivariatePolynomial& operator-=(const UnivariatePolynomial& other) {
-        int maxSize = std::max(_coefficients.size(), other._coefficients.size());
-        _coefficients.resize(maxSize, F::zero());
+        const int thisSize = _coefficients.size();
+        const int otherSize = other._coefficients.size();
 
-        for (int i = 0; i < other._coefficients.size(); i++) {
+        if (otherSize > thisSize) {
+            _coefficients.resize(otherSize, F::zero);
+        }
+
+        const int minSize = std::min(thisSize, otherSize);
+        for (int i = 0; i < minSize; i++) {
             _coefficients[i] -= other._coefficients[i];
+        }
+
+        //  Negate remaining coefficients if other is longer
+        for (int i = thisSize; i < otherSize; i++) {
+            _coefficients[i] = -other._coefficients[i];
         }
 
         _removeLeadingZeros();
@@ -171,22 +213,28 @@ public:
     }
 
     UnivariatePolynomial& operator-=(const F& scalar) {
-        _coefficients[0] = _coefficients[0] - scalar;
+        _coefficients.front() = _coefficients.front() - scalar;
         _removeLeadingZeros();
         return *this;
     }
 
     UnivariatePolynomial operator*(const UnivariatePolynomial& other) const {
-        if (isZero() || other.isZero()) {
+        if (isZeroPolynomial() || other.isZeroPolynomial()) {
             return UnivariatePolynomial();
         }
 
-        int resultSize = _coefficients.size() + other._coefficients.size() - 1;
-        std::vector<F> result(resultSize, F::zero());
+        const int thisSize = _coefficients.size();
+        const int otherSize = other._coefficients.size();
+        const int resultSize = thisSize + otherSize - 1;
+        std::vector<F> result(resultSize, F::zero);
 
-        for (int i = 0; i < _coefficients.size(); i++) {
-            for (int j = 0; j < other._coefficients.size(); j++) {
-                result[i + j] += _coefficients[i] * other._coefficients[j];
+        for (int i = 0; i < thisSize; i++) {
+            const F& coeff_i = _coefficients[i];
+
+            if (coeff_i != F::zero) { //  Skip zero coefficients
+                for (int j = 0; j < otherSize; j++) {
+                    result[i + j] += coeff_i * other._coefficients[j];
+                }
             }
         }
 
@@ -194,7 +242,7 @@ public:
     }
 
     UnivariatePolynomial operator*(const F& scalar) const {
-        if (scalar.isZero()) {
+        if (scalar == F::zero) {
             return UnivariatePolynomial();
         }
 
@@ -218,8 +266,8 @@ public:
     }
 
     UnivariatePolynomial& operator*=(const F& scalar) {
-        if (scalar.isZero()) {
-            _coefficients = {F::zero()};
+        if (scalar == F::zero) {
+            _coefficients = {F::zero};
         }
         else {
             for (F& coeff : _coefficients) {
@@ -249,7 +297,7 @@ public:
     }
 
     UnivariatePolynomial operator/(const F& scalar) const {
-        if (scalar.isZero()) {
+        if (scalar == F::zero) {
             throw std::invalid_argument("Division by zero");
         }
 
@@ -258,12 +306,15 @@ public:
     }
 
     UnivariatePolynomial& operator/=(const F& scalar) {
-        if (scalar.isZero()) {
+        if (scalar == F::zero) {
             throw std::invalid_argument("Division by zero");
         }
 
         F inv = scalar.multiplicativeInverse();
-        *this *= inv;
+        for (F& coeff : _coefficients) {
+            coeff *= inv;
+        }
+        _removeLeadingZeros();
         return *this;
     }
 
@@ -274,34 +325,22 @@ public:
     UnivariatePolynomial operator-() const {
         std::vector<F> result;
         result.reserve(_coefficients.size());
-
         for (const F& coeff : _coefficients) {
             result.push_back(-coeff);
         }
-
         return UnivariatePolynomial(std::move(result));
     }
 
     bool operator==(const UnivariatePolynomial& other) const {
-        if (_coefficients.size() != other._coefficients.size()) {
-            return false;
-        }
-
-        for (int i = 0; i < _coefficients.size(); i++) {
-            if (_coefficients[i] != other._coefficients[i]) {
-                return false;
-            }
-        }
-
-        return true;
+        return _coefficients == other._coefficients;
     }
 
     bool operator!=(const UnivariatePolynomial& other) const {
         return !(*this == other);
     }
 
-    bool isZero() const {
-        return _coefficients.size() == 1 && _coefficients[0].isZero();
+    bool isZeroPolynomial() const {
+        return _coefficients.size() == 1 && _coefficients.front() == F::zero;
     }
 
     bool isConstant() const {
@@ -309,12 +348,12 @@ public:
     }
 
     bool isMonic() const {
-        return !isZero() && leadingCoefficient().isOne();
+        return !isZeroPolynomial() && leadingCoefficient() == F::one;
     }
 
     //  Make polynomial monic (leading coefficient = 1)
     UnivariatePolynomial makeMonic() const {
-        if (isZero()) {
+        if (isZeroPolynomial()) {
             throw std::invalid_argument("Cannot make zero polynomial monic");
         }
 
@@ -324,7 +363,7 @@ public:
     //  Evaluate polynomial at a given point
     F evaluate(const F& x) const {
         if (_coefficients.empty()) {
-            return F::zero();
+            return F::zero;
         }
 
         //  Horner's method for efficient evaluation
@@ -339,29 +378,28 @@ public:
     //  Power operation
     UnivariatePolynomial power(int exp) const {
         if (exp == 0) {
-            return UnivariatePolynomial(F::one());
+            return UnivariatePolynomial(F::one);
         }
         if (exp == 1) {
             return *this;
         }
 
-        UnivariatePolynomial result(F::one());
+        UnivariatePolynomial result(F::one);
         UnivariatePolynomial base = *this;
 
         while (exp > 0) {
-            if (exp & 1) {
+            if (exp % 2 == 1) {
                 result *= base;
             }
             base *= base;
-            exp >>= 1;
+            exp /= 2;
         }
-
         return result;
     }
 
     //  String representation
     std::string toString(const std::string& variable = "x") const {
-        if (isZero()) {
+        if (isZeroPolynomial()) {
             return "0";
         }
 
@@ -372,7 +410,7 @@ public:
             const F& coeff = _coefficients[i];
             std::string coeffStr = coeff.toString();
 
-            if (coeff.isZero()) {
+            if (coeff == F::zero) {
                 continue;
             }
 
@@ -394,13 +432,13 @@ public:
             }
 
             //  Handle coefficient
-            if (i == 0 || !coeff.isOne()) {
+            if (i == 0 || coeff != F::one) {
                 oss << coeff.toString();
             }
 
             //  Handle variable and power
             if (i > 0) {
-                if (!coeff.isOne()) {
+                if (coeff != F::one) {
                     oss << "*";
                 }
                 oss << variable;
@@ -434,14 +472,14 @@ private:
     std::vector<F> _coefficients;
 
     void _removeLeadingZeros() {
-        while (_coefficients.size() > 1 && _coefficients.back().isZero()) {
+        while (_coefficients.size() > 1 && _coefficients.back() == F::zero) {
             _coefficients.pop_back();
         }
     }
 
     std::pair<UnivariatePolynomial, UnivariatePolynomial>
         _divmod(const UnivariatePolynomial& divisor) const {
-        if (divisor.isZero()) {
+        if (divisor.isZeroPolynomial()) {
             throw std::invalid_argument("Division by zero polynomial");
         }
 
@@ -453,12 +491,12 @@ private:
         UnivariatePolynomial quotient;
         F leadingCoeffInv = divisor.leadingCoefficient().multiplicativeInverse();
 
-        while (!dividend.isZero() && dividend.degree() >= divisor.degree()) {
+        while (!dividend.isZeroPolynomial() && dividend.degree() >= divisor.degree()) {
 
             F coeffRatio = dividend.leadingCoefficient() * leadingCoeffInv;
             int degreeDiff = dividend.degree() - divisor.degree();
 
-            std::vector<F> monomialCoeffs(degreeDiff + 1, F::zero());
+            std::vector<F> monomialCoeffs(degreeDiff + 1, F::zero);
             monomialCoeffs[degreeDiff] = coeffRatio;
             UnivariatePolynomial monomial(std::move(monomialCoeffs));
 
@@ -498,7 +536,7 @@ template<typename F> UnivariatePolynomial<F> makePolynomial(std::initializer_lis
 
 //  Helper function to create monomial x^n with coefficient c
 template<typename F> UnivariatePolynomial<F> makeMonomial(const F& coefficient, int degree) {
-    std::vector<F> coeffs(degree + 1, F::zero());
+    std::vector<F> coeffs(degree + 1, F::zero);
     coeffs[degree] = coefficient;
     return UnivariatePolynomial<F>(std::move(coeffs));
 }

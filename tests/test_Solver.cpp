@@ -24,6 +24,8 @@ protected:
         b = defineVariable<GaloisField>('b');
         c = defineVariable<GaloisField>('c');
         t = defineVariable<Real>('t');
+        u = defineVariable<Real>('u');
+        v = defineVariable<Real>('v');
     }
 
     MultivariatePolynomial<Rational> x;
@@ -33,6 +35,8 @@ protected:
     MultivariatePolynomial<GaloisField> b;
     MultivariatePolynomial<GaloisField> c;
     MultivariatePolynomial<Real> t;
+    MultivariatePolynomial<Real> u;
+    MultivariatePolynomial<Real> v;
 };
 
 TEST_F(SolverTest, FromMultivariateToUnivariateBasic) {
@@ -120,6 +124,7 @@ TEST_F(SolverTest, FindRealRoots) {
     EXPECT_TRUE(std::find(roots.begin(), roots.end(), Real(1)) != roots.end());
     EXPECT_TRUE(std::find(roots.begin(), roots.end(), Real(8)) != roots.end());
     EXPECT_TRUE(std::find(roots.begin(), roots.end(), Real(11)) != roots.end());
+    Real::setEpsilon(1e-7);
 
     auto f5 = fromMultivariateToUnivariate(t * (t - 1) * (t + 1) * (t - 2) * (t + 2));
     roots = findRealRoots(f5);
@@ -132,8 +137,8 @@ TEST_F(SolverTest, FindRealRoots) {
 }
 
 TEST_F(SolverTest, SolveSystemInconsistent) {
-    auto f1 = x + y - 3333;
-    auto f2 = x + y - 4444;
+    auto f1 = x + y - 3'333;
+    auto f2 = x + y - 4'444;
     auto X = solveSystem<Rational>({f1, f2}, findRationalRoots);
     ASSERT_TRUE(std::holds_alternative<std::string>(X));
     EXPECT_EQ(std::get<std::string>(X), "No solution exist in any field extension");
@@ -254,15 +259,32 @@ TEST_F(SolverTest, Mod2Eq) {
 }
 
 TEST_F(SolverTest, PhiCichon) {
-    auto f1 = x + y + z - 1;
-    auto f2 = x * x + y * y + z * z - 3;
-    auto f3 = x * x * x + y * y * y + z * z * z - 4;
+    auto f1 = u + v + t - 1;
+    auto f2 = (u ^ 2) + (v ^ 2) + (t ^ 2) - 3;
+    auto f3 = (u ^ 3) + (v ^ 3) + (t ^ 3) - 4;
 
-    auto X = solveSystem<Rational>({f1, f2, f3}, findRationalRoots);
-    auto solution = std::get<std::string>(X);
-    EXPECT_EQ(solution, "No solutions found");
+    auto X = solveSystem<Real>({f1, f2, f3}, findRealRoots);
+    auto solution = std::get<std::vector<std::map<char, Real>>>(X);
+    ASSERT_EQ(solution.size(), 6);
 
-    // x + y + z - 1 
-    // x ^ 2 + y ^ 2 + z ^ 2 - 3 
-    // x ^ 3 + y ^ 3 + z ^ 3 - 4
+    for (const std::map<char, Real>& sol : solution) {
+        EXPECT_TRUE(sol.find('u') != sol.end());
+        EXPECT_TRUE(sol.find('v') != sol.end());
+        EXPECT_TRUE(sol.find('t') != sol.end());
+        int count = 0;
+        if (sol.at('u') == Real::zero) {
+            count++;
+        }
+        if (sol.at('v') == Real::zero) {
+            count++;
+        }
+        if (sol.at('t') == Real::zero) {
+            count++;
+        }
+        EXPECT_EQ(count, 1);
+    }
+
+    //  x + y + z - 1
+    //  x ^ 2 + y ^ 2 + z ^ 2 - 3
+    //  x ^ 3 + y ^ 3 + z ^ 3 - 4
 }
