@@ -1,13 +1,14 @@
 #ifndef GROEBNER_BASIS_HPP
 #define GROEBNER_BASIS_HPP
 
+#include "Logger.hpp"
 #include "Monomial.hpp"
 #include "MonomialOrders.hpp"
 #include "MultivariatePolynomial.hpp"
 
 /**
  * @brief Division algorithm for multivariable polynomials. Size of quotient vector is equal to the
- * size of the divisor vector. Note that the result depends in general on the order of elements in
+ * size of the divisor vector. In general Result depends on the order of elements in
  * `G` as well as the monomial order choosen.
  */
 template<typename F>
@@ -65,7 +66,7 @@ std::pair<std::vector<MultivariatePolynomial<F>>, MultivariatePolynomial<F>>
 }
 
 /**
- * Calculates `S(f, g) = lcm(LM(f), LM(g)) * (f / LT(f)  - g / LT(g))`
+ * `S(f, g) = lcm(LM(f), LM(g)) * (f / LT(f)  - g / LT(g))`
  */
 template<typename F>
 MultivariatePolynomial<F> syzygy(const MultivariatePolynomial<F>& f,
@@ -88,22 +89,11 @@ MultivariatePolynomial<F> syzygy(const MultivariatePolynomial<F>& f,
     return u * f - v * g;
 }
 
-/**
- * Checks if monomials satisfy the lcm criterion in Buchberger's algorithm. That occurs when they
- * are relativly prime and so `lcm(a, b) = a * b`
- */
-inline bool lcmCriterion(const Monomial& a, const Monomial& b) {
-    return Monomial::lcm(a, b) == a * b;
-}
-
-/**
- * Checks if monomials satisfy the chain criterion in Buchberger's algorithm. That occurs when there
- * is a third monomial that divides the lcm of the two monomials
- */
-inline bool chainCriterion(const Monomial& a, const Monomial& b,
-                           const std::vector<Monomial>& remainingMonomials) {
-    for (const Monomial& monomial : remainingMonomials) {
-        if (Monomial::divides(Monomial::lcm(a, b), monomial)) {
+template<typename F>
+bool chainCriterion(const Monomial& lcm_ab, const std::vector<MultivariatePolynomial<F>>& G,
+                    int startIdx, const MonomialOrder& order) {
+    for (int k = startIdx; k < G.size(); k++) {
+        if (Monomial::divides(lcm_ab, G[k].leadingMonomial(order))) {
             return true;
         }
     }
@@ -111,8 +101,7 @@ inline bool chainCriterion(const Monomial& a, const Monomial& b,
 }
 
 /**
- * @brief Extends set `F` to a Groebner basis using Buchberger's algorithm
-
+ * @brief Extends set `X` to a Groebner basis using Buchberger's algorithm
  */
 template<typename F>
 std::vector<MultivariatePolynomial<F>>
@@ -120,31 +109,51 @@ std::vector<MultivariatePolynomial<F>>
                           const MonomialOrder& order) {
 
     std::vector<MultivariatePolynomial<F>> G = X;
+    Logger::groebnerBasis("📥 Initial basis size: " + std::to_string(X.size()));
+    int iterationCount = 0;
 
     while (true) {
-
+        iterationCount++;
         const int n = G.size();
         std::vector<MultivariatePolynomial<F>> H = G;
         bool somethingAdded = false;
 
+        //  Statistics for this iteration
+        const int totalPairs = n * (n - 1) / 2;
+        int currentPair = 0;
+        int lcmSkipped = 0;
+        int chainSkipped = 0;
+        int divisionsPerformed = 0;
+        int newPolynomials = 0;
+
+        Logger::groebnerBasis("🔄 ITERATION #" + std::to_string(iterationCount));
+        Logger::groebnerBasis("   📊 Current basis size: " + std::to_string(n));
+        Logger::groebnerBasis("   🧪 Pairs to check: " + std::to_string(totalPairs));
+        Logger::printProgressBar(0, totalPairs);
+
         //  Iterate over all pairs (i, j) in G
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
+                currentPair++;
 
                 const Monomial& i_monomial = G[i].leadingMonomial(order);
                 const Monomial& j_monomial = G[j].leadingMonomial(order);
+                Monomial lcm_ij = Monomial::lcm(i_monomial, j_monomial);
 
-                //  First check lcmCriterion and chainCriterion to avoid doing division
-                if (lcmCriterion(i_monomial, j_monomial)) {
+                //  First check lcmCriterion. If `a, b ` are relativly prime, we don't need to
+                //  comput syzygy
+                if (lcm_ij == i_monomial * j_monomial) {
+                    lcmSkipped++;
+                    Logger::printProgressBar(currentPair, totalPairs);
                     continue;
                 }
 
-                std::vector<Monomial> remainingMonomials(n - (j + 1));
-                for (int k = j + 1; k < n; k++) {
-                    remainingMonomials[k - (j + 1)] = G[k].leadingMonomial(order);
-                }
-
-                if (chainCriterion(i_monomial, j_monomial, remainingMonomials)) {
+                //  Second check chainCriterion. That occurs when there
+                //  is a third monomial that divides the lcm of the two
+                //  monomials
+                if (chainCriterion(lcm_ij, G, j + 1, order)) {
+                    chainSkipped++;
+                    Logger::printProgressBar(currentPair, totalPairs);
                     continue;
                 }
 
@@ -153,16 +162,41 @@ std::vector<MultivariatePolynomial<F>>
                 auto [_, r] = polynomialReduce(s, G, order);
 
                 if (!r.isZeroPolynomial()) {
+                    newPolynomials++;
                     H.push_back(r);
                     somethingAdded = true;
                 }
+
+                Logger::printProgressBar(currentPair, totalPairs);
             }
         }
 
+        Logger::clearProgressBar();
+
+        Logger::groebnerBasis("📈 ITERATION #" + std::to_string(iterationCount) + " STATISTICS:");
+        Logger::groebnerBasis("   🚫 LCM criterion skipped: " + std::to_string(lcmSkipped) +
+                              " pairs");
+        Logger::groebnerBasis("   ⛓️  Chain criterion skipped: " + std::to_string(chainSkipped) +
+                              " pairs");
+        Logger::groebnerBasis("   ➗ Divisions performed: " + std::to_string(divisionsPerformed) +
+                              " pairs");
+        Logger::groebnerBasis("   ➕ New polynomials added: " + std::to_string(newPolynomials));
+
+        if (totalPairs > 0) {
+            double skipPercentage = 100.0 * (lcmSkipped + chainSkipped) / totalPairs;
+            Logger::groebnerBasis(
+                "   📊 Total skip rate: " + std::to_string(static_cast<int>(skipPercentage)) + "%");
+        }
+
+
         //  If something was added, update G and continue, otherwise return
         if (!somethingAdded) {
+            Logger::groebnerBasis("🎉 Groebner basis is complete!");
+            Logger::groebnerBasis("📊 Final basis size: " + std::to_string(H.size()));
             return H;
         }
+
+        Logger::groebnerBasis("🐨 Not yet a Groebner basis, continuing iteration...");
         G = std::move(H);
     }
 }
@@ -175,25 +209,31 @@ std::vector<MultivariatePolynomial<F>>
     reduceGroebnerBasis(const std::vector<MultivariatePolynomial<F>>& G, const MonomialOrder& order,
                         bool normalizedCoefficients) {
 
-    std::vector<MultivariatePolynomial<F>> H = G;
+    std::vector<MultivariatePolynomial<F>> H;
+    H.reserve(G.size());
 
-    //  First pass: Remove elements that are in the leading terms ideal
-    for (const MultivariatePolynomial<F>& g : G) {
-
-        auto it = std::find(H.begin(), H.end(), g);
-        if (it != H.end()) {
-            H.erase(it);
-        }
-        else {
-            continue;
-        }
+    //  First pass: Remove polynomials whose leading terms are divisible by others
+    for (int i = 0; i < G.size(); i++) {
+        const MultivariatePolynomial<F>& g = G[i];
+        const Monomial& g_leadingMonomial = g.leadingMonomial(order);
 
         bool inLeadingTermsIdeal = false;
-        //  If g is in the leading terms ideal generate by other polynomials we don't need it
+
+        //  Check against polynomials we've already kept
         for (const MultivariatePolynomial<F>& h : H) {
-            if (Monomial::divides(g.leadingMonomial(order), h.leadingMonomial(order))) {
+            if (Monomial::divides(g_leadingMonomial, h.leadingMonomial(order))) {
                 inLeadingTermsIdeal = true;
                 break;
+            }
+        }
+
+        //  Check against remaining polynomials in G
+        if (!inLeadingTermsIdeal) {
+            for (int j = i + 1; j < G.size(); j++) {
+                if (Monomial::divides(g_leadingMonomial, G[j].leadingMonomial(order))) {
+                    inLeadingTermsIdeal = true;
+                    break;
+                }
             }
         }
 
@@ -202,22 +242,32 @@ std::vector<MultivariatePolynomial<F>>
         }
     }
 
-    const int currentSize = H.size();
-    bool somethingReduced = true;
-
     //  Second pass: Perform reductions
+    bool somethingReduced = true;
     while (somethingReduced) {
-
         somethingReduced = false;
-        //  Reduce each polynomial in the basis by the others to simplify it
-        for (int i = 0; i < currentSize; i++) {
 
-            std::vector<MultivariatePolynomial<F>> K = H;
-            K.erase(K.begin() + i);
-            auto [_, r] = polynomialReduce(H[i], K, order);
+        for (int i = 0; i < H.size(); i++) {
+            //  Create divisor set without H[i] - use indices to avoid copying
+            std::vector<int> divisorIndices;
+            divisorIndices.reserve(H.size() - 1);
+            for (int j = 0; j < H.size(); j++) {
+                if (j != i) {
+                    divisorIndices.push_back(j);
+                }
+            }
+
+            //  Create temporary vector of divisors (unavoidable for polynomialReduce interface)
+            std::vector<MultivariatePolynomial<F>> divisors;
+            divisors.reserve(divisorIndices.size());
+            for (int idx : divisorIndices) {
+                divisors.push_back(H[idx]);
+            }
+
+            auto [_, r] = polynomialReduce(H[i], divisors, order);
 
             if (!r.isZeroPolynomial() && H[i] != r) {
-                H[i] = r;
+                H[i] = std::move(r);
                 somethingReduced = true;
             }
         }
@@ -231,6 +281,8 @@ std::vector<MultivariatePolynomial<F>>
         }
     }
 
+    Logger::groebnerBasis("🎉 Groebner basis reduction complete");
+    Logger::groebnerBasis("📊 Reduced basis size: " + std::to_string(H.size()));
     return H;
 }
 
@@ -242,8 +294,7 @@ std::vector<MultivariatePolynomial<F>>
     calculateGroebnerBasis(const std::vector<MultivariatePolynomial<F>>& X,
                            const MonomialOrder& order, bool normalizedCoefficients = true) {
     std::vector<MultivariatePolynomial<F>> G = extendToGroebnerBasis(X, order);
-    G = reduceGroebnerBasis(G, order, normalizedCoefficients);
-    return G;
+    return reduceGroebnerBasis(G, order, normalizedCoefficients);
 }
 
 #endif //  GROEBNER_BASIS_HPP

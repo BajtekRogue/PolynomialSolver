@@ -2,7 +2,8 @@ CXX = g++
 SRC_DIR = ../src/cpp
 BUILD_DIR = build
 
-CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-sign-compare -I$(SRC_DIR) -pthread
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-sign-compare -I$(SRC_DIR) -pthread 
+# CXXFLAGS += -DENABLE_ALL_LOGGING
 LIBS = -lgtest_main -lgtest -pthread
 
 TEST_SOURCES := $(wildcard test_*.cpp)

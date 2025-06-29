@@ -1,18 +1,20 @@
-#ifndef RATIONAL_HPP
-#define RATIONAL_HPP
+#ifndef BIG_RATIONAL_HPP
+#define BIG_RATIONAL_HPP
 
 #include "Field.hpp"
 
+#include <boost/multiprecision/cpp_int.hpp>
 #include <cmath>
-#include <cstdint>
 #include <iostream>
 #include <numeric>
 #include <sstream>
 
-class Rational : public Field<Rational> {
+using BigInt = boost::multiprecision::cpp_int;
+
+class BigRational : public Field<BigRational> {
 
 public:
-    Rational(int64_t numerator = 0, int64_t denominator = 1)
+    BigRational(const BigInt& numerator = 0, const BigInt& denominator = 1)
         : _numerator(numerator), _denominator(denominator) {
         if (denominator == 0) {
             throw std::invalid_argument("Denominator cannot be zero");
@@ -20,19 +22,22 @@ public:
         _simplify();
     }
 
-    Rational(const Rational& other) = default;
+    BigRational(int64_t numerator, int64_t denominator = 1)
+        : _numerator(numerator), _denominator(denominator) {
+        if (denominator == 0) {
+            throw std::invalid_argument("Denominator cannot be zero");
+        }
+        _simplify();
+    }
 
-    Rational(const std::string& str) {
+    BigRational(const BigRational& other) = default;
+
+    BigRational(const std::string& str) {
         size_t slashPos = str.find('/');
-        size_t pos = 0;
         try {
             if (slashPos == std::string::npos) {
-                _numerator = std::stoll(str, &pos);
+                _numerator = BigInt(str);
                 _denominator = 1;
-
-                if (pos != str.size()) {
-                    throw std::invalid_argument("Not an integer");
-                }
             }
             else {
                 std::string numeratorStr = str.substr(0, slashPos);
@@ -42,15 +47,8 @@ public:
                     throw std::invalid_argument("Denominator contains + or -");
                 }
 
-                _numerator = std::stoll(numeratorStr, &pos);
-                if (pos != numeratorStr.size()) {
-                    throw std::invalid_argument("Numerator not an integer");
-                }
-
-                _denominator = std::stoll(denominatorStr, &pos);
-                if (pos != denominatorStr.size()) {
-                    throw std::invalid_argument("Denominator not an integer");
-                }
+                _numerator = BigInt(numeratorStr);
+                _denominator = BigInt(denominatorStr);
 
                 if (_denominator == 0) {
                     throw std::invalid_argument("Denominator cannot be zero");
@@ -63,51 +61,53 @@ public:
         }
     }
 
-    Rational operator+(const Rational& other) const override {
+    BigRational operator+(const BigRational& other) const override {
         if (_denominator == other._denominator) {
-            return Rational(_numerator + other._numerator, _denominator, false);
+            return BigRational(_numerator + other._numerator, _denominator);
         }
 
-        int64_t resultNumerator = _numerator * other._denominator + other._numerator * _denominator;
-        int64_t resultDenominator = _denominator * other._denominator;
-        return Rational(resultNumerator, resultDenominator);
+        BigInt resultNumerator = _numerator * other._denominator + other._numerator * _denominator;
+        BigInt resultDenominator = _denominator * other._denominator;
+        return BigRational(resultNumerator, resultDenominator);
     }
 
-    Rational operator-(const Rational& other) const override {
+    BigRational operator-(const BigRational& other) const override {
         if (_denominator == other._denominator) {
-            return Rational(_numerator - other._numerator, _denominator, false);
+            return BigRational(_numerator - other._numerator, _denominator);
         }
 
-        int64_t resultNumerator = _numerator * other._denominator - other._numerator * _denominator;
-        int64_t resultDenominator = _denominator * other._denominator;
-        return Rational(resultNumerator, resultDenominator);
+        BigInt resultNumerator = _numerator * other._denominator - other._numerator * _denominator;
+        BigInt resultDenominator = _denominator * other._denominator;
+        return BigRational(resultNumerator, resultDenominator);
     }
 
-    Rational operator*(const Rational& other) const override {
+    BigRational operator*(const BigRational& other) const override {
         if (_numerator == 0 || other._numerator == 0) {
-            return Rational(0, 1, false);
+            return BigRational(0, 1);
         }
 
         //  Cross-simplification to reduce intermediate results
-        int64_t gcd1 = std::gcd(std::abs(_numerator), std::abs(other._denominator));
-        int64_t gcd2 = std::gcd(std::abs(other._numerator), std::abs(_denominator));
+        BigInt gcd1 = boost::multiprecision::gcd(boost::multiprecision::abs(_numerator),
+                                                 boost::multiprecision::abs(other._denominator));
+        BigInt gcd2 = boost::multiprecision::gcd(boost::multiprecision::abs(other._numerator),
+                                                 boost::multiprecision::abs(_denominator));
 
-        int64_t num1 = _numerator / gcd1;
-        int64_t den1 = _denominator / gcd2;
-        int64_t num2 = other._numerator / gcd2;
-        int64_t den2 = other._denominator / gcd1;
+        BigInt num1 = _numerator / gcd1;
+        BigInt den1 = _denominator / gcd2;
+        BigInt num2 = other._numerator / gcd2;
+        BigInt den2 = other._denominator / gcd1;
 
-        return Rational(num1 * num2, den1 * den2, false); 
+        return BigRational(num1 * num2, den1 * den2, false); 
     }
 
-    Rational operator/(const Rational& other) const override {
+    BigRational operator/(const BigRational& other) const override {
         if (other._numerator == 0) {
             throw std::invalid_argument("Cannot divide by zero");
         }
         return *this * other.reciprocal();
     }
 
-    Rational& operator+=(const Rational& other) override {
+    BigRational& operator+=(const BigRational& other) override {
         if (_denominator == other._denominator) {
             _numerator += other._numerator;
         }
@@ -119,7 +119,7 @@ public:
         return *this;
     }
 
-    Rational& operator-=(const Rational& other) override {
+    BigRational& operator-=(const BigRational& other) override {
         if (_denominator == other._denominator) {
             _numerator -= other._numerator;
         }
@@ -131,7 +131,7 @@ public:
         return *this;
     }
 
-    Rational& operator*=(const Rational& other) override {
+    BigRational& operator*=(const BigRational& other) override {
         if (_numerator == 0 || other._numerator == 0) {
             _numerator = 0;
             _denominator = 1;
@@ -144,15 +144,9 @@ public:
         return *this;
     }
 
-    Rational& operator/=(const Rational& other) override {
+    BigRational& operator/=(const BigRational& other) override {
         if (other._numerator == 0) {
             throw std::invalid_argument("Cannot divide by zero");
-        }
-
-        if(*this == other) {
-            _numerator = 1;
-            _denominator = 1;
-            return *this;
         }
 
         _numerator *= other._denominator;
@@ -161,31 +155,30 @@ public:
         return *this;
     }
 
-    Rational operator+() const override {
+    BigRational operator+() const override {
         return *this;
     }
 
-    Rational operator-() const override {
-        return Rational(-_numerator, _denominator, false); //  Skip simplification
+    BigRational operator-() const override {
+        return BigRational(-_numerator, _denominator, false); 
     }
 
-    bool operator==(const Rational& other) const override {
+    bool operator==(const BigRational& other) const override {
         if (_denominator == other._denominator) {
             return _numerator == other._numerator;
         }
         return _numerator * other._denominator == _denominator * other._numerator;
     }
 
-    bool operator!=(const Rational& other) const override {
+    bool operator!=(const BigRational& other) const override {
         return !(*this == other);
     }
 
-    bool operator<(const Rational& other) const override {
+    bool operator<(const BigRational& other) const override {
         if (_denominator == other._denominator) {
             return _numerator < other._numerator;
         }
 
-        //  Handle sign differences quickly
         bool thisNeg = _numerator < 0;
         bool otherNeg = other._numerator < 0;
         if (thisNeg && !otherNeg) {
@@ -198,45 +191,45 @@ public:
         return _numerator * other._denominator < _denominator * other._numerator;
     }
 
-    bool operator<=(const Rational& other) const override {
+    bool operator<=(const BigRational& other) const override {
         return !(other < *this);
     }
 
-    bool operator>(const Rational& other) const override {
+    bool operator>(const BigRational& other) const override {
         return other < *this;
     }
 
-    bool operator>=(const Rational& other) const override {
+    bool operator>=(const BigRational& other) const override {
         return !(*this < other);
     }
 
-    Rational& operator=(const Rational& other) = default;
+    BigRational& operator=(const BigRational& other) = default;
 
-    Rational additiveInverse() const override {
+    BigRational additiveInverse() const override {
         return -(*this);
     }
 
-    Rational multiplicativeInverse() const override {
+    BigRational multiplicativeInverse() const override {
         return reciprocal();
     }
 
     std::string toString() const override {
         if (_denominator == 1) {
-            return std::to_string(_numerator);
+            return _numerator.str();
         }
-        return std::to_string(_numerator) + "/" + std::to_string(_denominator);
+        return _numerator.str() + "/" + _denominator.str();
     }
 
-    Rational power(int64_t exp) const override {
+    BigRational power(int64_t exp) const override {
         if (exp == 0) {
-            return Rational(1, 1, false);
+            return BigRational(1, 1, false);
         }
         if (exp < 0) {
             return reciprocal().power(-exp);
         }
 
-        Rational result(1, 1, false);
-        Rational base = *this;
+        BigRational result(1, 1, false);
+        BigRational base = *this;
 
         while (exp > 0) {
             if (exp & 1) {
@@ -251,18 +244,18 @@ public:
         return result;
     }
 
-    Rational operator+(int64_t other) const {
+    BigRational operator+(int64_t other) const {
         if (other == 0) {
             return *this;
         }
-        return Rational(_numerator + other * _denominator, _denominator, false);
+        return BigRational(_numerator + other * _denominator, _denominator, false);
     }
 
-    friend Rational operator+(int64_t other, const Rational& r) {
+    friend BigRational operator+(int64_t other, const BigRational& r) {
         return r + other;
     }
 
-    Rational& operator+=(int64_t other) {
+    BigRational& operator+=(int64_t other) {
         if (other != 0) {
             _numerator += other * _denominator;
             _simplify();
@@ -270,18 +263,18 @@ public:
         return *this;
     }
 
-    Rational operator-(int64_t other) const {
+    BigRational operator-(int64_t other) const {
         if (other == 0) {
             return *this;
         }
-        return Rational(_numerator - other * _denominator, _denominator, false);
+        return BigRational(_numerator - other * _denominator, _denominator, false);
     }
 
-    friend Rational operator-(int64_t other, const Rational& r) {
-        return Rational(other * r._denominator - r._numerator, r._denominator);
+    friend BigRational operator-(int64_t other, const BigRational& r) {
+        return BigRational(other * r._denominator - r._numerator, r._denominator);
     }
 
-    Rational& operator-=(int64_t other) {
+    BigRational& operator-=(int64_t other) {
         if (other != 0) {
             _numerator -= other * _denominator;
             _simplify();
@@ -289,21 +282,21 @@ public:
         return *this;
     }
 
-    Rational operator*(int64_t other) const {
+    BigRational operator*(int64_t other) const {
         if (other == 0) {
-            return Rational(0, 1, false);
+            return BigRational(0, 1, false);
         }
         if (other == 1) {
             return *this;
         }
-        return Rational(_numerator * other, _denominator);
+        return BigRational(_numerator * other, _denominator);
     }
 
-    friend Rational operator*(int64_t other, const Rational& r) {
+    friend BigRational operator*(int64_t other, const BigRational& r) {
         return r * other;
     }
 
-    Rational& operator*=(int64_t other) {
+    BigRational& operator*=(int64_t other) {
         if (other == 0) {
             _numerator = 0;
             _denominator = 1;
@@ -315,24 +308,24 @@ public:
         return *this;
     }
 
-    Rational operator/(int64_t other) const {
+    BigRational operator/(int64_t other) const {
         if (other == 0) {
             throw std::invalid_argument("Cannot divide by zero");
         }
         if (other == 1) {
             return *this;
         }
-        return Rational(_numerator, _denominator * other);
+        return BigRational(_numerator, _denominator * other);
     }
 
-    friend Rational operator/(int64_t other, const Rational& r) {
+    friend BigRational operator/(int64_t other, const BigRational& r) {
         if (r._numerator == 0) {
             throw std::invalid_argument("Cannot divide by zero");
         }
-        return Rational(other * r._denominator, r._numerator);
+        return BigRational(other * r._denominator, r._numerator);
     }
 
-    Rational& operator/=(int64_t other) {
+    BigRational& operator/=(int64_t other) {
         if (other == 0) {
             throw std::invalid_argument("Cannot divide by zero");
         }
@@ -343,11 +336,12 @@ public:
         return *this;
     }
 
+    //  Optimized int64_t comparisons
     bool operator==(int64_t other) const {
         return _denominator == 1 && _numerator == other;
     }
 
-    friend bool operator==(int64_t other, const Rational& r) {
+    friend bool operator==(int64_t other, const BigRational& r) {
         return r == other;
     }
 
@@ -355,7 +349,7 @@ public:
         return !(*this == other);
     }
 
-    friend bool operator!=(int64_t other, const Rational& r) {
+    friend bool operator!=(int64_t other, const BigRational& r) {
         return r != other;
     }
 
@@ -363,7 +357,7 @@ public:
         return _numerator < other * _denominator;
     }
 
-    friend bool operator<(int64_t other, const Rational& r) {
+    friend bool operator<(int64_t other, const BigRational& r) {
         return other * r._denominator < r._numerator;
     }
 
@@ -371,7 +365,7 @@ public:
         return _numerator > other * _denominator;
     }
 
-    friend bool operator>(int64_t other, const Rational& r) {
+    friend bool operator>(int64_t other, const BigRational& r) {
         return other * r._denominator > r._numerator;
     }
 
@@ -379,7 +373,7 @@ public:
         return !(*this > other);
     }
 
-    friend bool operator<=(int64_t other, const Rational& r) {
+    friend bool operator<=(int64_t other, const BigRational& r) {
         return !(other > r);
     }
 
@@ -387,11 +381,11 @@ public:
         return !(*this < other);
     }
 
-    friend bool operator>=(int64_t other, const Rational& r) {
+    friend bool operator>=(int64_t other, const BigRational& r) {
         return !(other < r);
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Rational& r) {
+    friend std::ostream& operator<<(std::ostream& os, const BigRational& r) {
         os << r._numerator;
         if (r._denominator != 1) {
             os << "/" << r._denominator;
@@ -399,11 +393,11 @@ public:
         return os;
     }
 
-    int64_t getNumerator() const {
+    const BigInt& getNumerator() const {
         return _numerator;
     }
 
-    int64_t getDenominator() const {
+    const BigInt& getDenominator() const {
         return _denominator;
     }
 
@@ -415,35 +409,35 @@ public:
         return static_cast<float>(_numerator) / static_cast<float>(_denominator);
     }
 
-    Rational abs() const {
+    BigRational abs() const {
         if (_numerator < 0) {
-            return Rational(-_numerator, _denominator, false);
+            return BigRational(-_numerator, _denominator, false);
         }
         return *this;
     }
 
-    Rational reciprocal() const {
+    BigRational reciprocal() const {
         if (_numerator == 0) {
             throw std::invalid_argument("Cannot get reciprocal of zero");
         }
         if (_numerator < 0) {
-            return Rational(-_denominator, -_numerator, false);
+            return BigRational(-_denominator, -_numerator, false);
         }
-        return Rational(_denominator, _numerator, false);
+        return BigRational(_denominator, _numerator, false);
     }
 
     bool isInteger() const {
         return _denominator == 1;
     }
 
-    const static Rational zero;
-    const static Rational one;
+    const static BigRational zero;
+    const static BigRational one;
 
 private:
-    int64_t _numerator;
-    int64_t _denominator;
+    BigInt _numerator;
+    BigInt _denominator;
 
-    Rational(int64_t numerator, int64_t denominator, bool simplify)
+    BigRational(const BigInt& numerator, const BigInt& denominator, bool simplify)
         : _numerator(numerator), _denominator(denominator) {
         if (simplify) {
             _simplify();
@@ -463,8 +457,10 @@ private:
 
         //  Only compute GCD if both values are reasonably large
         //  For small values, the GCD computation overhead might not be worth it
-        if (std::abs(_numerator) > 1 || std::abs(_denominator) > 1) {
-            int64_t gcd_val = std::gcd(std::abs(_numerator), std::abs(_denominator));
+        if (boost::multiprecision::abs(_numerator) > 1 ||
+            boost::multiprecision::abs(_denominator) > 1) {
+            BigInt gcd_val = boost::multiprecision::gcd(boost::multiprecision::abs(_numerator),
+                                                        boost::multiprecision::abs(_denominator));
             if (gcd_val > 1) {
                 _numerator /= gcd_val;
                 _denominator /= gcd_val;
@@ -473,4 +469,4 @@ private:
     }
 };
 
-#endif //  RATIONAL_HPP
+#endif //  BIG_RATIONAL_HPP

@@ -54,7 +54,7 @@ public:
             }
 
             if (_monomial.count(var)) {
-                throw std::invalid_argument("Duplicate variable: " + var);
+                throw std::invalid_argument("Duplicate variable: " + std::string(1, var));
             }
 
             ++it;
@@ -275,7 +275,7 @@ public:
     /**
      * Returns true iff `a` is divisible by `b` so that `a / b` is still a monomial
      */
-    inline static bool divides(const Monomial& a, const Monomial& b) {
+    static bool divides(const Monomial& a, const Monomial& b) {
         for (const auto& [var, exp] : b.getMonomial()) {
             if (a.getExponent(var) < exp) {
                 return false;
@@ -285,14 +285,25 @@ public:
     }
 
     /**
-     * Returns the least common multiple of two monomials, that is `lcm(a, b) = [max{a[i],
-     * b[i]}]_i`
+     * `lcm(a, b) = [max{a[i], b[i]}]_i`
      */
     static Monomial lcm(const Monomial& a, const Monomial& b) {
-        std::map<char, int> result = a._monomial;
-        for (const auto& [var, exp] : b._monomial) {
-            result[var] = std::max(result[var], exp);
+        std::map<char, int> result;
+
+        //  Start with the larger monomial to minimize insertions
+        const std::map<char, int>& larger =
+            (a._numVariables >= b._numVariables) ? a._monomial : b._monomial;
+        const std::map<char, int>& smaller =
+            (a._numVariables < b._numVariables) ? a._monomial : b._monomial;
+        result = larger;
+
+        for (const auto& [var, exp] : smaller) {
+            auto [it, inserted] = result.try_emplace(var, exp);
+            if (!inserted) {
+                it->second = std::max(it->second, exp);
+            }
         }
+
         return Monomial(result);
     }
 

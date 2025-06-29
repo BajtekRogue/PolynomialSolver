@@ -16,6 +16,9 @@
 template<typename F> class MultivariatePolynomial {
     static_assert(std::is_base_of_v<Field<F>, F>, "F must be derived from Field<F>");
 
+    /* If you want to try hash maps follows:
+     * https://claude.ai/chat/d9eab463-d199-40be-a684-13a3a696831c */
+
 public:
     MultivariatePolynomial() { }
 
@@ -28,7 +31,7 @@ public:
     MultivariatePolynomial(std::map<Monomial, F> coefficients) {
         for (auto& [monomial, coefficient] : coefficients) {
             if (coefficient != F::zero) {
-                _coefficients[std::move(monomial)] = coefficient;
+                _coefficients[monomial] = coefficient;
             }
         }
     }
@@ -44,8 +47,7 @@ public:
         s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
 
         if (s.empty()) {
-            throw std::invalid_argument(
-                "Empty string");
+            throw std::invalid_argument("Empty string");
         }
 
         if (s == "0") {
@@ -161,20 +163,19 @@ public:
                 }
 
                 //  Add to the polynomial (accumulate if monomial already exists)
-                auto it = _coefficients.find(monomial);
-                if (it != _coefficients.end()) {
-                    //  Monomial already exists, add coefficients properly
-                    F existingCoeff = it->second;
-                    F newCoeff = existingCoeff + coefficient;
-                    it->second = newCoeff;
-                }
-                else {
-                    _coefficients[monomial] = coefficient;
+                auto [it, inserted] = _coefficients.try_emplace(monomial, coefficient);
+
+                if (!inserted) {
+                    it->second += coefficient;
+                    if (it->second == F::zero) {
+                        _coefficients.erase(it);
+                    }
                 }
             }
             catch (const std::exception& e) {
                 //  Handle parsing errors
-                throw std::invalid_argument("Failed to parse term: " + term + " bc " + e.what());
+                throw std::invalid_argument("Failed to parse term: " + term + " with error [" +
+                                            e.what() + "]");
             }
         }
     }
@@ -203,17 +204,13 @@ public:
         std::map<Monomial, F> result = _coefficients;
 
         for (const auto& [monomial, coefficient] : other._coefficients) {
-            auto it = result.find(monomial);
+            auto [it, inserted] = result.try_emplace(monomial, coefficient);
 
-            if (it != result.end()) {
+            if (!inserted) {
                 it->second += coefficient;
-
                 if (it->second == F::zero) {
                     result.erase(it);
                 }
-            }
-            else {
-                result[monomial] = coefficient;
             }
         }
         return MultivariatePolynomial(std::move(result));
@@ -226,16 +223,13 @@ public:
 
         std::map<Monomial, F> result = _coefficients;
 
-        auto it = result.find(Monomial());
-        if (it != result.end()) {
+        auto [it, inserted] = result.try_emplace(Monomial(), other);
 
+        if (!inserted) {
             it->second += other;
             if (it->second == F::zero) {
                 result.erase(it);
             }
-        }
-        else {
-            result[Monomial()] = other;
         }
 
         return MultivariatePolynomial(std::move(result));
@@ -247,17 +241,13 @@ public:
 
     MultivariatePolynomial& operator+=(const MultivariatePolynomial<F>& other) {
         for (const auto& [monomial, coefficient] : other._coefficients) {
-            auto it = _coefficients.find(monomial);
+            auto [it, inserted] = _coefficients.try_emplace(monomial, coefficient);
 
-            if (it != _coefficients.end()) {
-
+            if (!inserted) {
                 it->second += coefficient;
                 if (it->second == F::zero) {
                     _coefficients.erase(it);
                 }
-            }
-            else {
-                _coefficients[monomial] = coefficient;
             }
         }
 
@@ -267,17 +257,13 @@ public:
 
     MultivariatePolynomial& operator+=(F other) {
         if (other != F::zero) {
-            auto it = _coefficients.find(Monomial());
+            auto [it, inserted] = _coefficients.try_emplace(Monomial(), other);
 
-            if (it != _coefficients.end()) {
-
+            if (!inserted) {
                 it->second += other;
                 if (it->second == F::zero) {
                     _coefficients.erase(it);
                 }
-            }
-            else {
-                _coefficients[Monomial()] = other;
             }
         }
 
@@ -289,17 +275,13 @@ public:
         std::map<Monomial, F> result = _coefficients;
 
         for (const auto& [monomial, coefficient] : other._coefficients) {
-            auto it = result.find(monomial);
+            auto [it, inserted] = result.try_emplace(monomial, -coefficient);
 
-            if (it != result.end()) {
-
+            if (!inserted) {
                 it->second -= coefficient;
                 if (it->second == F::zero) {
                     result.erase(it);
                 }
-            }
-            else {
-                result[monomial] = -coefficient;
             }
         }
 
@@ -316,17 +298,13 @@ public:
 
     MultivariatePolynomial& operator-=(const MultivariatePolynomial<F>& other) {
         for (const auto& [monomial, coefficient] : other._coefficients) {
-            auto it = _coefficients.find(monomial);
+            auto [it, inserted] = _coefficients.try_emplace(monomial, -coefficient);
 
-            if (it != _coefficients.end()) {
-
+            if (!inserted) {
                 it->second -= coefficient;
                 if (it->second == F::zero) {
                     _coefficients.erase(it);
                 }
-            }
-            else {
-                _coefficients[monomial] = -coefficient;
             }
         }
 
@@ -336,6 +314,7 @@ public:
 
     MultivariatePolynomial& operator-=(F other) {
         *this += (-other);
+        return *this;
     }
 
     MultivariatePolynomial operator*(const MultivariatePolynomial<F>& other) const {
@@ -348,21 +327,15 @@ public:
         for (const auto& [monomial1, coefficient1] : _coefficients) {
             for (const auto& [monomial2, coefficient2] : other._coefficients) {
 
-                Monomial monomial = monomial1 * monomial2;
-                F coefficient = coefficient1 * coefficient2;
+                Monomial resultMonomial = monomial1 * monomial2;
+                F resultCoeff = coefficient1 * coefficient2;
 
-                if (coefficient != F::zero) {
-                    auto it = result.find(monomial);
+                auto [it, inserted] = result.try_emplace(resultMonomial, resultCoeff);
 
-                    if (it != result.end()) {
-
-                        it->second += coefficient;
-                        if (it->second == F::zero) {
-                            result.erase(it);
-                        }
-                    }
-                    else {
-                        result[monomial] = coefficient;
+                if (!inserted) {
+                    it->second += resultCoeff;
+                    if (it->second == F::zero) {
+                        result.erase(it);
                     }
                 }
             }
@@ -504,12 +477,12 @@ public:
     }
 
     bool operator==(F other) const {
-        if (_coefficients.size() == 0) {
+        if (_coefficients.empty()) {
             return other == F::zero;
         }
         else {
-            return (_coefficients.size() == 1 && _coefficients.begin()->first == Monomial() &&
-                    _coefficients.begin()->second == other);
+            return _coefficients.size() == 1 && _coefficients.begin()->first == Monomial() &&
+                   _coefficients.begin()->second == other;
         }
     }
 
@@ -587,7 +560,7 @@ public:
     std::vector<char> getVariables() const {
         std::set<char> variables;
         for (const auto& [monomial, _] : _coefficients) {
-            for (const auto& var : monomial.getVariables()) {
+            for (const char& var : monomial.getVariables()) {
                 variables.insert(var);
             }
         }
@@ -608,18 +581,12 @@ public:
             std::map<char, int> newMonomial = monomial.getMonomial();
 
             newMonomial.erase(var);
-            auto it = result.find(Monomial(newMonomial));
+            auto [it, inserted] = result.try_emplace(Monomial(newMonomial), newCoefficient);
 
-            if (it != result.end()) {
-
+            if (!inserted) {
                 it->second += newCoefficient;
                 if (it->second == F::zero) {
                     result.erase(it);
-                }
-            }
-            else {
-                if (newCoefficient != F::zero) {
-                    result[Monomial(newMonomial)] = newCoefficient;
                 }
             }
         }
@@ -659,10 +626,9 @@ private:
     void _cacheLeadingMonomialAndCoefficient(const MonomialOrder& order) const {
         //  Only recompute if the order has changed or cache is invalid
         if (_cachedOrder != &order || !_validLeadingTerm) {
-            auto maxIt = std::max_element(_coefficients.begin(), _coefficients.end(),
-                                          [&order](const auto& p1, const auto& p2) {
-                                              return order.compare(p1.first, p2.first);
-                                          });
+            auto maxIt = std::max_element(
+                _coefficients.begin(), _coefficients.end(),
+                [&order](const auto& a, const auto& b) { return order.compare(a.first, b.first); });
 
             if (maxIt == _coefficients.end()) {
                 _cachedLeadingMonomial = Monomial();
@@ -678,7 +644,6 @@ private:
         }
     }
 };
-
 
 template<typename F> MultivariatePolynomial<F> defineVariable(char var) {
     std::map<char, int> exponents;

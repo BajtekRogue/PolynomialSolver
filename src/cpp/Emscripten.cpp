@@ -6,32 +6,28 @@
 #include "Rational.hpp"
 #include "Solver.hpp"
 #include "UnivariatePolynomial.hpp"
+#include "BigRational.hpp"
 
 #include <algorithm>
 #include <emscripten/bind.h>
 
 using namespace emscripten;
 
-struct SystemResult__Rational {
+
+#ifdef USE_BIG_RATIONAL_TYPE
+using Rational = BigRational;
+#endif
+
+template<typename F> struct SystemResult {
     bool success = false;
     std::string error = "unknown error";
-    std::vector<MultivariatePolynomial<Rational>> polynomials;
+    std::vector<MultivariatePolynomial<F>> polynomials;
     std::vector<std::string> variables;
 };
 
-struct SystemResult__GaloisField {
-    bool success = false;
-    std::string error = "unknown error";
-    std::vector<MultivariatePolynomial<GaloisField>> polynomials;
-    std::vector<std::string> variables;
-};
-
-struct SystemResult__Real {
-    bool success = false;
-    std::string error = "unknown error";
-    std::vector<MultivariatePolynomial<Real>> polynomials;
-    std::vector<std::string> variables;
-};
+using SystemResult__Rational = SystemResult<Rational>;
+using SystemResult__GaloisField = SystemResult<GaloisField>;
+using SystemResult__Real = SystemResult<Real>;
 
 std::string
     printCharacteristicEquations__Rational(const std::vector<MultivariatePolynomial<Rational>>& X) {
@@ -103,8 +99,7 @@ SystemResult__Rational
             variableSet.insert(f_vars.begin(), f_vars.end());
         }
         catch (const std::exception& e) {
-            result.error = "Error parsing polynomial " + std::to_string(i + 1) + " (\"" +
-                           polyStrings[i] + "\"): " + e.what();
+            result.error = "Error parsing polynomial  (\"" + polyStrings[i] + "\"): " + e.what();
             result.success = false;
             result.polynomials = {};
             result.variables = {};
@@ -141,8 +136,7 @@ SystemResult__GaloisField
             variableSet.insert(f_vars.begin(), f_vars.end());
         }
         catch (const std::exception& e) {
-            result.error = "Error parsing polynomial " + std::to_string(i + 1) + " (\"" +
-                           polyStrings[i] + "\"): " + e.what();
+            result.error = "Error parsing polynomial  (\"" + polyStrings[i] + "\"): " + e.what();
             result.success = false;
             result.polynomials = {};
             result.variables = {};
@@ -177,8 +171,7 @@ SystemResult__Real buildSystemFromStrings__Real(const std::vector<std::string>& 
             variableSet.insert(f_vars.begin(), f_vars.end());
         }
         catch (const std::exception& e) {
-            result.error = "Error parsing polynomial " + std::to_string(i + 1) + " (\"" +
-                           polyStrings[i] + "\"): " + e.what();
+            result.error = "Error parsing polynomial  (\"" + polyStrings[i] + "\"): " + e.what();
             result.success = false;
             result.polynomials = {};
             result.variables = {};

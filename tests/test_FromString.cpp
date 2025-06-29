@@ -218,7 +218,6 @@ TEST_F(FromStringTest, RationalPolynomials) {
               3 * (x ^ 2) + 5 * x * y - 7 * y * (z ^ 3));
 }
 
-//  Additional tests for MultivariatePolynomial string constructor
 
 TEST_F(FromStringTest, PolynomialSimpleRational) {
     EXPECT_EQ(MultivariatePolynomial<Rational>("3/2x^20 + 5y - 7/3"),

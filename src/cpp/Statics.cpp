@@ -1,3 +1,4 @@
+#include "BigRational.hpp"
 #include "GaloisField.hpp"
 #include "Monomial.hpp"
 #include "Rational.hpp"
@@ -15,6 +16,9 @@ const GaloisField GaloisField::one = GaloisField(1);
 
 const Real Real::zero = Real(0.0);
 const Real Real::one = Real(1.0);
+
+const BigRational BigRational::zero = BigRational(0);
+const BigRational BigRational::one = BigRational(1);
 
 int64_t GaloisField::prime = 2;
 
