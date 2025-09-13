@@ -3,14 +3,14 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-class RationalTest : public ::testing::Test {
+class RationalTests : public ::testing::Test {
 protected:
     void SetUp() override {
 
     };
 };
 
-TEST_F(RationalTest, Constructor) {
+TEST_F(RationalTests, Constructor) {
     Rational _;
     EXPECT_EQ(_.getNumerator(), 0);
     EXPECT_EQ(_.getDenominator(), 1);
@@ -54,7 +54,7 @@ TEST_F(RationalTest, Constructor) {
     EXPECT_THROW(Rational(3, 0), std::invalid_argument);
 }
 
-TEST_F(RationalTest, EqualityAndComparison) {
+TEST_F(RationalTests, EqualityAndComparison) {
     Rational a(1, 2);
     Rational b(-10, 9);
     Rational c(3);
@@ -76,7 +76,7 @@ TEST_F(RationalTest, EqualityAndComparison) {
     EXPECT_LE(a, h);
 }
 
-TEST_F(RationalTest, FieldArithmetic) {
+TEST_F(RationalTests, FieldArithmetic) {
     Rational a(1, 2);
     Rational b(-10, 9);
     Rational c(3);
@@ -97,7 +97,7 @@ TEST_F(RationalTest, FieldArithmetic) {
     EXPECT_EQ(f / c, Rational(7, 12));
 }
 
-TEST_F(RationalTest, CompoundAssignmentOperators) {
+TEST_F(RationalTests, CompoundAssignmentOperators) {
     Rational a(1, 2);
     Rational b(1, 3);
     a += b;
@@ -135,7 +135,7 @@ TEST_F(RationalTest, CompoundAssignmentOperators) {
     EXPECT_EQ(l, Rational(2, 3));
 }
 
-TEST_F(RationalTest, UnaryOperators) {
+TEST_F(RationalTests, UnaryOperators) {
     Rational a(3, 4);
     Rational b(-2, 5);
 
@@ -147,7 +147,7 @@ TEST_F(RationalTest, UnaryOperators) {
     EXPECT_EQ(+b, b);
 }
 
-TEST_F(RationalTest, MixedArithmetic) {
+TEST_F(RationalTests, MixedArithmetic) {
     Rational a(1, 2);
     int b = 3;
 
@@ -161,7 +161,7 @@ TEST_F(RationalTest, MixedArithmetic) {
     EXPECT_EQ(b / a, Rational(6, 1));
 }
 
-TEST_F(RationalTest, EdgeCases) {
+TEST_F(RationalTests, EdgeCases) {
     Rational zero(0);
     Rational one(1);
     Rational a(3, 4);
@@ -184,7 +184,7 @@ TEST_F(RationalTest, EdgeCases) {
     EXPECT_EQ(b / b, one);
 }
 
-TEST_F(RationalTest, PowerOperations) {
+TEST_F(RationalTests, PowerOperations) {
     Rational a(2, 3);
     Rational b(-1, 2);
 
@@ -193,7 +193,7 @@ TEST_F(RationalTest, PowerOperations) {
     EXPECT_EQ(a * a * a, Rational(8, 27));
 }
 
-TEST_F(RationalTest, FractionSimplification) {
+TEST_F(RationalTests, FractionSimplification) {
     Rational a(24, 36);
     EXPECT_EQ(a, Rational(2, 3));
 
@@ -204,7 +204,7 @@ TEST_F(RationalTest, FractionSimplification) {
     EXPECT_EQ(c, Rational(-2, 3));
 }
 
-TEST_F(RationalTest, CompoundAssignmentWithSelf) {
+TEST_F(RationalTests, CompoundAssignmentWithSelf) {
     Rational a(1, 2);
     a += a;
     EXPECT_EQ(a, Rational(1, 1));
@@ -222,7 +222,7 @@ TEST_F(RationalTest, CompoundAssignmentWithSelf) {
     EXPECT_EQ(d, Rational(1, 1));
 }
 
-TEST_F(RationalTest, ChainedOperations) {
+TEST_F(RationalTests, ChainedOperations) {
     Rational a(1, 2);
     Rational b(1, 3);
     Rational c(1, 6);

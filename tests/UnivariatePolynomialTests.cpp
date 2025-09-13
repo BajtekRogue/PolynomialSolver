@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-class UnivariatePolynomialTest : public ::testing::Test {
+class UnivariatePolynomialTests : public ::testing::Test {
 protected:
     void SetUp() override {
         zeroPoly = UnivariatePolynomial<Rational>();
@@ -36,13 +36,13 @@ protected:
     UnivariatePolynomial<Rational> p5;
 };
 
-TEST_F(UnivariatePolynomialTest, DefaultConstructor) {
+TEST_F(UnivariatePolynomialTests, DefaultConstructor) {
     UnivariatePolynomial<Rational> p;
     EXPECT_TRUE(p.isZeroPolynomial());
     EXPECT_EQ(p.degree(), 0);
 }
 
-TEST_F(UnivariatePolynomialTest, ConstantConstructor) {
+TEST_F(UnivariatePolynomialTests, ConstantConstructor) {
     UnivariatePolynomial<Rational> p(Rational(5));
     EXPECT_FALSE(p.isZeroPolynomial());
     EXPECT_TRUE(p.isConstant());
@@ -50,7 +50,7 @@ TEST_F(UnivariatePolynomialTest, ConstantConstructor) {
     EXPECT_EQ(p[0], Rational(5));
 }
 
-TEST_F(UnivariatePolynomialTest, VectorConstructor) {
+TEST_F(UnivariatePolynomialTests, VectorConstructor) {
     std::vector<Rational> coeffs = {Rational(1), Rational(2), Rational(3)};
     UnivariatePolynomial<Rational> p(coeffs);
     EXPECT_EQ(p.degree(), 2);
@@ -59,14 +59,14 @@ TEST_F(UnivariatePolynomialTest, VectorConstructor) {
     EXPECT_EQ(p[2], Rational(3));
 }
 
-TEST_F(UnivariatePolynomialTest, EmptyVectorConstructor) {
+TEST_F(UnivariatePolynomialTests, EmptyVectorConstructor) {
     std::vector<Rational> empty_coeffs;
     UnivariatePolynomial<Rational> p(empty_coeffs);
     EXPECT_TRUE(p.isZeroPolynomial());
     EXPECT_EQ(p.degree(), 0);
 }
 
-TEST_F(UnivariatePolynomialTest, LeadingZeroRemoval) {
+TEST_F(UnivariatePolynomialTests, LeadingZeroRemoval) {
     std::vector<Rational> coeffs = {Rational(1), Rational(2), Rational(0), Rational(0)};
     UnivariatePolynomial<Rational> p(coeffs);
     EXPECT_EQ(p.degree(), 1);
@@ -74,14 +74,14 @@ TEST_F(UnivariatePolynomialTest, LeadingZeroRemoval) {
     EXPECT_EQ(p[1], Rational(2));
 }
 
-TEST_F(UnivariatePolynomialTest, IndexOperatorRead) {
+TEST_F(UnivariatePolynomialTests, IndexOperatorRead) {
     EXPECT_EQ(p1[0], Rational(1));
     EXPECT_EQ(p1[1], Rational(2));
     EXPECT_EQ(p1[2], Rational(3));
     EXPECT_EQ(p1[10], Rational(0));
 }
 
-TEST_F(UnivariatePolynomialTest, IndexOperatorWrite) {
+TEST_F(UnivariatePolynomialTests, IndexOperatorWrite) {
     UnivariatePolynomial<Rational> p = p1;
     p[1] = Rational(5);
     EXPECT_EQ(p[1], Rational(5));
@@ -91,13 +91,13 @@ TEST_F(UnivariatePolynomialTest, IndexOperatorWrite) {
     EXPECT_EQ(p.degree(), 5);
 }
 
-TEST_F(UnivariatePolynomialTest, LeadingCoefficient) {
+TEST_F(UnivariatePolynomialTests, LeadingCoefficient) {
     EXPECT_EQ(p1.leadingCoefficient(), Rational(3));
     EXPECT_EQ(p2.leadingCoefficient(), Rational(1));
     EXPECT_EQ(zeroPoly.leadingCoefficient(), Rational(0));
 }
 
-TEST_F(UnivariatePolynomialTest, AdditionBasic) {
+TEST_F(UnivariatePolynomialTests, AdditionBasic) {
     UnivariatePolynomial<Rational> result = p1 + p2;
     EXPECT_EQ(result[0], Rational(3));
     EXPECT_EQ(result[1], Rational(3));
@@ -105,23 +105,23 @@ TEST_F(UnivariatePolynomialTest, AdditionBasic) {
     EXPECT_EQ(result.degree(), 2);
 }
 
-TEST_F(UnivariatePolynomialTest, AdditionWithZero) {
+TEST_F(UnivariatePolynomialTests, AdditionWithZero) {
     UnivariatePolynomial<Rational> result = p1 + zeroPoly;
     EXPECT_EQ(result, p1);
 }
 
-TEST_F(UnivariatePolynomialTest, AdditionCommutative) {
+TEST_F(UnivariatePolynomialTests, AdditionCommutative) {
     EXPECT_EQ(p1 + p2, p2 + p1);
 }
 
-TEST_F(UnivariatePolynomialTest, AdditionWithScalar) {
+TEST_F(UnivariatePolynomialTests, AdditionWithScalar) {
     UnivariatePolynomial<Rational> result = p1 + Rational(5);
     EXPECT_EQ(result[0], Rational(6));
     EXPECT_EQ(result[1], Rational(2));
     EXPECT_EQ(result[2], Rational(3));
 }
 
-TEST_F(UnivariatePolynomialTest, AdditionAssignment) {
+TEST_F(UnivariatePolynomialTests, AdditionAssignment) {
     UnivariatePolynomial<Rational> p = p1;
     p += p2;
     EXPECT_EQ(p[0], Rational(3));
@@ -129,31 +129,31 @@ TEST_F(UnivariatePolynomialTest, AdditionAssignment) {
     EXPECT_EQ(p[2], Rational(3));
 }
 
-TEST_F(UnivariatePolynomialTest, SubtractionBasic) {
+TEST_F(UnivariatePolynomialTests, SubtractionBasic) {
     UnivariatePolynomial<Rational> result = p1 - p2;
     EXPECT_EQ(result[0], Rational(-1));
     EXPECT_EQ(result[1], Rational(1));
     EXPECT_EQ(result[2], Rational(3));
 }
 
-TEST_F(UnivariatePolynomialTest, SubtractionWithZero) {
+TEST_F(UnivariatePolynomialTests, SubtractionWithZero) {
     UnivariatePolynomial<Rational> result = p1 - zeroPoly;
     EXPECT_EQ(result, p1);
 }
 
-TEST_F(UnivariatePolynomialTest, SubtractionWithSelf) {
+TEST_F(UnivariatePolynomialTests, SubtractionWithSelf) {
     UnivariatePolynomial<Rational> result = p1 - p1;
     EXPECT_TRUE(result.isZeroPolynomial());
 }
 
-TEST_F(UnivariatePolynomialTest, SubtractionWithScalar) {
+TEST_F(UnivariatePolynomialTests, SubtractionWithScalar) {
     UnivariatePolynomial<Rational> result = p1 - Rational(1);
     EXPECT_EQ(result[0], Rational(0));
     EXPECT_EQ(result[1], Rational(2));
     EXPECT_EQ(result[2], Rational(3));
 }
 
-TEST_F(UnivariatePolynomialTest, MultiplicationBasic) {
+TEST_F(UnivariatePolynomialTests, MultiplicationBasic) {
     UnivariatePolynomial<Rational> result = p2 * p3;
     EXPECT_EQ(result[0], Rational(0));
     EXPECT_EQ(result[1], Rational(0));
@@ -162,46 +162,46 @@ TEST_F(UnivariatePolynomialTest, MultiplicationBasic) {
     EXPECT_EQ(result.degree(), 3);
 }
 
-TEST_F(UnivariatePolynomialTest, MultiplicationWithZero) {
+TEST_F(UnivariatePolynomialTests, MultiplicationWithZero) {
     UnivariatePolynomial<Rational> result = p1 * zeroPoly;
     EXPECT_TRUE(result.isZeroPolynomial());
 }
 
-TEST_F(UnivariatePolynomialTest, MultiplicationWithOne) {
+TEST_F(UnivariatePolynomialTests, MultiplicationWithOne) {
     UnivariatePolynomial<Rational> result = p1 * onePoly;
     EXPECT_EQ(result, p1);
 }
 
-TEST_F(UnivariatePolynomialTest, MultiplicationCommutative) {
+TEST_F(UnivariatePolynomialTests, MultiplicationCommutative) {
     EXPECT_EQ(p1 * p2, p2 * p1);
 }
 
-TEST_F(UnivariatePolynomialTest, MultiplicationWithScalar) {
+TEST_F(UnivariatePolynomialTests, MultiplicationWithScalar) {
     UnivariatePolynomial<Rational> result = p1 * Rational(2);
     EXPECT_EQ(result[0], Rational(2));
     EXPECT_EQ(result[1], Rational(4));
     EXPECT_EQ(result[2], Rational(6));
 }
 
-TEST_F(UnivariatePolynomialTest, MultiplicationWithFractionalScalar) {
+TEST_F(UnivariatePolynomialTests, MultiplicationWithFractionalScalar) {
     UnivariatePolynomial<Rational> result = p1 * Rational(1, 2);
     EXPECT_EQ(result[0], Rational(1, 2));
     EXPECT_EQ(result[1], Rational(1));
     EXPECT_EQ(result[2], Rational(3, 2));
 }
 
-TEST_F(UnivariatePolynomialTest, DivisionByScalar) {
+TEST_F(UnivariatePolynomialTests, DivisionByScalar) {
     UnivariatePolynomial<Rational> result = p1 / Rational(2);
     EXPECT_EQ(result[0], Rational(1, 2));
     EXPECT_EQ(result[1], Rational(1));
     EXPECT_EQ(result[2], Rational(3, 2));
 }
 
-TEST_F(UnivariatePolynomialTest, DivisionByZeroScalar) {
+TEST_F(UnivariatePolynomialTests, DivisionByZeroScalar) {
     EXPECT_THROW(p1 / Rational(0), std::invalid_argument);
 }
 
-TEST_F(UnivariatePolynomialTest, PolynomialDivision) {
+TEST_F(UnivariatePolynomialTests, PolynomialDivision) {
     std::vector<Rational> coeffsDividend = {Rational(-1), Rational(0), Rational(1)};
     UnivariatePolynomial<Rational> dividend(coeffsDividend);
 
@@ -214,7 +214,7 @@ TEST_F(UnivariatePolynomialTest, PolynomialDivision) {
     EXPECT_EQ(quotient.degree(), 1);
 }
 
-TEST_F(UnivariatePolynomialTest, PolynomialModulo) {
+TEST_F(UnivariatePolynomialTests, PolynomialModulo) {
     std::vector<Rational> coeffsDividend = {Rational(2), Rational(3), Rational(1)};
     UnivariatePolynomial<Rational> dividend(coeffsDividend);
 
@@ -225,52 +225,52 @@ TEST_F(UnivariatePolynomialTest, PolynomialModulo) {
     EXPECT_TRUE(remainder.isZeroPolynomial());
 }
 
-TEST_F(UnivariatePolynomialTest, DivisionByZeroPolynomial) {
+TEST_F(UnivariatePolynomialTests, DivisionByZeroPolynomial) {
     EXPECT_THROW(p1 / zeroPoly, std::invalid_argument);
 }
 
-TEST_F(UnivariatePolynomialTest, UnaryPlus) {
+TEST_F(UnivariatePolynomialTests, UnaryPlus) {
     UnivariatePolynomial<Rational> result = +p1;
     EXPECT_EQ(result, p1);
 }
 
-TEST_F(UnivariatePolynomialTest, UnaryMinus) {
+TEST_F(UnivariatePolynomialTests, UnaryMinus) {
     UnivariatePolynomial<Rational> result = -p1;
     EXPECT_EQ(result[0], Rational(-1));
     EXPECT_EQ(result[1], Rational(-2));
     EXPECT_EQ(result[2], Rational(-3));
 }
 
-TEST_F(UnivariatePolynomialTest, EqualityOperator) {
+TEST_F(UnivariatePolynomialTests, EqualityOperator) {
     UnivariatePolynomial<Rational> p_copy = p1;
     EXPECT_TRUE(p1 == p_copy);
     EXPECT_FALSE(p1 == p2);
 }
 
-TEST_F(UnivariatePolynomialTest, InequalityOperator) {
+TEST_F(UnivariatePolynomialTests, InequalityOperator) {
     UnivariatePolynomial<Rational> p_copy = p1;
     EXPECT_FALSE(p1 != p_copy);
     EXPECT_TRUE(p1 != p2);
 }
 
-TEST_F(UnivariatePolynomialTest, IsZero) {
+TEST_F(UnivariatePolynomialTests, IsZero) {
     EXPECT_TRUE(zeroPoly.isZeroPolynomial());
     EXPECT_FALSE(p1.isZeroPolynomial());
 }
 
-TEST_F(UnivariatePolynomialTest, IsConstant) {
+TEST_F(UnivariatePolynomialTests, IsConstant) {
     EXPECT_TRUE(zeroPoly.isConstant());
     EXPECT_TRUE(onePoly.isConstant());
     EXPECT_FALSE(p1.isConstant());
 }
 
-TEST_F(UnivariatePolynomialTest, IsMonic) {
+TEST_F(UnivariatePolynomialTests, IsMonic) {
     EXPECT_FALSE(p1.isMonic());
     EXPECT_TRUE(p2.isMonic());
     EXPECT_FALSE(zeroPoly.isMonic());
 }
 
-TEST_F(UnivariatePolynomialTest, MakeMonic) {
+TEST_F(UnivariatePolynomialTests, MakeMonic) {
     UnivariatePolynomial<Rational> monic = p1.makeMonic();
     EXPECT_TRUE(monic.isMonic());
     EXPECT_EQ(monic[0], Rational(1, 3));
@@ -278,14 +278,14 @@ TEST_F(UnivariatePolynomialTest, MakeMonic) {
     EXPECT_EQ(monic[2], Rational(1));
 }
 
-TEST_F(UnivariatePolynomialTest, String) {
+TEST_F(UnivariatePolynomialTests, String) {
     EXPECT_EQ(p1.toString(), "3*x² + 2*x + 1");
     EXPECT_EQ(p2.toString(), "x + 2");
     EXPECT_EQ(p3.toString(), "x²");
     EXPECT_EQ(p4.toString(), "1/3*x + 1/2");
 }
 
-TEST_F(UnivariatePolynomialTest, Derivative) {
+TEST_F(UnivariatePolynomialTests, Derivative) {
     std::vector<Rational> coeffsq = {Rational(7), Rational(0), Rational(-3), Rational(8)};
     auto q = UnivariatePolynomial<Rational>(coeffsq);
     EXPECT_EQ(q, p5.derivative());

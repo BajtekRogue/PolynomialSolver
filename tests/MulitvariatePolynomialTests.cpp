@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-class MultivariatePolynomialTest : public ::testing::Test {
+class MultivariatePolynomialTests : public ::testing::Test {
 protected:
     void SetUp() override {
         //  Define common variables
@@ -63,16 +63,16 @@ protected:
     std::map<char, Rational> incompleteValues;
 };
 
-TEST_F(MultivariatePolynomialTest, DefaultConstructor) {
+TEST_F(MultivariatePolynomialTests, DefaultConstructor) {
     EXPECT_TRUE(zeroMultivariatePolynomial.isZeroPolynomial());
 }
 
-TEST_F(MultivariatePolynomialTest, Constructor) {
+TEST_F(MultivariatePolynomialTests, Constructor) {
     MultivariatePolynomial<Rational> p = MultivariatePolynomial<Rational>(expectedCoefficients);
     EXPECT_EQ(p.getCoefficients(), expectedCoefficients);
 }
 
-TEST_F(MultivariatePolynomialTest, Add1) {
+TEST_F(MultivariatePolynomialTests, Add1) {
     std::map<Monomial, Rational> coefficients = {
         {Monomial(std::map<char, int>{{'x', 1}}), Rational(2)},
         {Monomial(std::map<char, int>{{'y', 1}}), Rational(3)}
@@ -81,18 +81,18 @@ TEST_F(MultivariatePolynomialTest, Add1) {
     EXPECT_EQ(p1, expected);
 }
 
-TEST_F(MultivariatePolynomialTest, Add2) {
+TEST_F(MultivariatePolynomialTests, Add2) {
     MultivariatePolynomial<Rational> q = -(x * x) + 3 * y * y;
     EXPECT_EQ(p2 + q, 4 * y * y + 5);
 }
 
-TEST_F(MultivariatePolynomialTest, AddInPlace) {
+TEST_F(MultivariatePolynomialTests, AddInPlace) {
     MultivariatePolynomial<Rational> temp = p3; //  x³ + xy² + 5
     temp += x * y * y - 5;
     EXPECT_EQ(temp, (x ^ 3) + 2 * x * y * y);
 }
 
-TEST_F(MultivariatePolynomialTest, Sub1) {
+TEST_F(MultivariatePolynomialTests, Sub1) {
     MultivariatePolynomial<Rational> p = x * 2 - y * 3;
     std::map<Monomial, Rational> coefficients = {
         {Monomial(std::map<char, int>{{'x', 1}}), Rational(2) },
@@ -102,53 +102,53 @@ TEST_F(MultivariatePolynomialTest, Sub1) {
     EXPECT_EQ(p, expected);
 }
 
-TEST_F(MultivariatePolynomialTest, Sub2) {
+TEST_F(MultivariatePolynomialTests, Sub2) {
     MultivariatePolynomial<Rational> q = (x * x) + 3 * y * y;
     EXPECT_EQ(p2 - q, -2 * y * y + 5);
 }
 
-TEST_F(MultivariatePolynomialTest, SubInPlace) {
+TEST_F(MultivariatePolynomialTests, SubInPlace) {
     MultivariatePolynomial<Rational> temp = p3; //  x³ + xy² + 5
     temp -= x * y * y - 5;
     EXPECT_EQ(temp, (x ^ 3) + 10);
 }
 
-TEST_F(MultivariatePolynomialTest, Multiplication1) {
+TEST_F(MultivariatePolynomialTests, Multiplication1) {
     auto result = p5 * p4; //  (x² + 3y² + 5) * (x + y)
     auto expected = (x ^ 3) + (x ^ 2) * y + 3 * x * (y ^ 2) + 5 * x + 5 * y + 3 * (y ^ 3);
     EXPECT_EQ(result, expected);
 }
 
-TEST_F(MultivariatePolynomialTest, Multiplication2) {
+TEST_F(MultivariatePolynomialTests, Multiplication2) {
     auto result = p5 * 6; //  (x² + 3y² + 5) * 6
     auto expected = 6 * (x ^ 2) + 18 * (y ^ 2) + 30;
     EXPECT_EQ(result, expected);
 }
 
-TEST_F(MultivariatePolynomialTest, Multiplication3) {
+TEST_F(MultivariatePolynomialTests, Multiplication3) {
     auto result = p5 * 0; //  (x² + 3y² + 5) * 0
     EXPECT_EQ(result, MultivariatePolynomial<Rational>(Rational(0)));
 }
 
-TEST_F(MultivariatePolynomialTest, MultiplicationInPlace) {
+TEST_F(MultivariatePolynomialTests, MultiplicationInPlace) {
     MultivariatePolynomial<Rational> temp = p3; //  x³ + xy² + 5
     temp *= x * y * y - 5;
     EXPECT_EQ(temp, (x ^ 4) * (y ^ 2) - 5 * (x ^ 3) + (x ^ 2) * (y ^ 4) - 25);
 }
 
-TEST_F(MultivariatePolynomialTest, EvaluateError) {
+TEST_F(MultivariatePolynomialTests, EvaluateError) {
     EXPECT_THROW(y.evaluate(incompleteValues), std::invalid_argument);
 }
 
-TEST_F(MultivariatePolynomialTest, Evaluate) {
+TEST_F(MultivariatePolynomialTests, Evaluate) {
     EXPECT_EQ(complexPoly.evaluate(evalValues), Rational(6));
 }
 
-TEST_F(MultivariatePolynomialTest, TotalDegree) {
+TEST_F(MultivariatePolynomialTests, TotalDegree) {
     EXPECT_EQ(degreePoly.totalDegree(), 111);
 }
 
-TEST_F(MultivariatePolynomialTest, Substitute) {
+TEST_F(MultivariatePolynomialTests, Substitute) {
     MultivariatePolynomial<Rational> expected = 3 * y + 14;
     EXPECT_EQ(substitutePoly.substitute('x', Rational(3)), expected);
 }

@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <vector>
 
-class RootFindersTest : public ::testing::Test {
+class RootFindersTests : public ::testing::Test {
 protected:
     static void SetUpTestSuite() {
         GaloisField::setPrime(7);
@@ -54,7 +54,7 @@ protected:
     MultivariatePolynomial<BigRational> T;
 };
 
-TEST_F(RootFindersTest, FromMultivariateToUnivariateBasic) {
+TEST_F(RootFindersTests, FromMultivariateToUnivariateBasic) {
     auto f1 = fromMultivariateToUnivariate(x - 2);
     EXPECT_EQ(f1[0], Rational(-2));
     EXPECT_EQ(f1[1], Rational(1));
@@ -69,7 +69,7 @@ TEST_F(RootFindersTest, FromMultivariateToUnivariateBasic) {
     EXPECT_THROW(fromMultivariateToUnivariate(x * y), std::runtime_error);
 }
 
-TEST_F(RootFindersTest, FindRationalRoots) {
+TEST_F(RootFindersTests, FindRationalRoots) {
     std::vector<Rational> roots;
     std::vector<Rational> coeffs;
 
@@ -122,7 +122,7 @@ TEST_F(RootFindersTest, FindRationalRoots) {
                 big_roots.end());
 }
 
-TEST_F(RootFindersTest, FindRealRoots) {
+TEST_F(RootFindersTests, FindRealRoots) {
     std::vector<Real> roots;
 
     auto f1 = fromMultivariateToUnivariate(3 * t + 11);
@@ -169,4 +169,3 @@ TEST_F(RootFindersTest, FindRealRoots) {
     EXPECT_TRUE(std::find(roots.begin(), roots.end(), Real(2)) != roots.end());
     EXPECT_TRUE(std::find(roots.begin(), roots.end(), Real(0)) != roots.end());
 }
-

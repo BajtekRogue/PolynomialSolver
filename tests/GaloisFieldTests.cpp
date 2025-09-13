@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-class GaloisFieldTest : public ::testing::Test {
+class GaloisFieldTests : public ::testing::Test {
 protected:
     void SetUp() override { }
 
@@ -10,7 +10,7 @@ protected:
 };
 
 
-TEST_F(GaloisFieldTest, PrimeSettingValid) {
+TEST_F(GaloisFieldTests, PrimeSettingValid) {
     EXPECT_NO_THROW(GaloisField::setPrime(7));
     EXPECT_EQ(GaloisField::prime, 7);
 
@@ -21,7 +21,7 @@ TEST_F(GaloisFieldTest, PrimeSettingValid) {
     EXPECT_EQ(GaloisField::prime, 13);
 }
 
-TEST_F(GaloisFieldTest, PrimeSettingInvalid) {
+TEST_F(GaloisFieldTests, PrimeSettingInvalid) {
     EXPECT_FALSE(GaloisField::setPrime(1));
     EXPECT_FALSE(GaloisField::setPrime(0));
     EXPECT_FALSE(GaloisField::setPrime(-5));
@@ -30,7 +30,7 @@ TEST_F(GaloisFieldTest, PrimeSettingInvalid) {
     EXPECT_FALSE(GaloisField::setPrime(15));
 }
 
-TEST_F(GaloisFieldTest, ConstructorWithPrime) {
+TEST_F(GaloisFieldTests, ConstructorWithPrime) {
     GaloisField::setPrime(7);
 
     EXPECT_NO_THROW(GaloisField a = 3);
@@ -41,7 +41,7 @@ TEST_F(GaloisFieldTest, ConstructorWithPrime) {
     EXPECT_NO_THROW(GaloisField f = -1);
 }
 
-TEST_F(GaloisFieldTest, ValueNormalization) {
+TEST_F(GaloisFieldTests, ValueNormalization) {
     GaloisField::setPrime(7);
 
     GaloisField a = 10;
@@ -55,7 +55,7 @@ TEST_F(GaloisFieldTest, ValueNormalization) {
     EXPECT_EQ(d.toInt(), 6);
 }
 
-TEST_F(GaloisFieldTest, Addition) {
+TEST_F(GaloisFieldTests, Addition) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -71,7 +71,7 @@ TEST_F(GaloisFieldTest, Addition) {
     EXPECT_EQ(f.toInt(), 1);
 }
 
-TEST_F(GaloisFieldTest, Subtraction) {
+TEST_F(GaloisFieldTests, Subtraction) {
     GaloisField::setPrime(7);
 
     GaloisField a = 5;
@@ -87,7 +87,7 @@ TEST_F(GaloisFieldTest, Subtraction) {
     EXPECT_EQ(f.toInt(), 4);
 }
 
-TEST_F(GaloisFieldTest, Multiplication) {
+TEST_F(GaloisFieldTests, Multiplication) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -103,7 +103,7 @@ TEST_F(GaloisFieldTest, Multiplication) {
     EXPECT_EQ(f.toInt(), 1);
 }
 
-TEST_F(GaloisFieldTest, Division) {
+TEST_F(GaloisFieldTests, Division) {
     GaloisField::setPrime(7);
 
     GaloisField a = 6;
@@ -116,7 +116,7 @@ TEST_F(GaloisFieldTest, Division) {
     EXPECT_THROW(a / zero, std::invalid_argument);
 }
 
-TEST_F(GaloisFieldTest, CompoundAssignment) {
+TEST_F(GaloisFieldTests, CompoundAssignment) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -138,7 +138,7 @@ TEST_F(GaloisFieldTest, CompoundAssignment) {
     EXPECT_EQ(a.toInt(), 3);
 }
 
-TEST_F(GaloisFieldTest, UnaryOperators) {
+TEST_F(GaloisFieldTests, UnaryOperators) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -153,7 +153,7 @@ TEST_F(GaloisFieldTest, UnaryOperators) {
     EXPECT_EQ(negZero.toInt(), 0);
 }
 
-TEST_F(GaloisFieldTest, ComparisonOperators) {
+TEST_F(GaloisFieldTests, ComparisonOperators) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -166,7 +166,7 @@ TEST_F(GaloisFieldTest, ComparisonOperators) {
     EXPECT_TRUE(a != c);
 }
 
-TEST_F(GaloisFieldTest, AdditiveInverse) {
+TEST_F(GaloisFieldTests, AdditiveInverse) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -176,7 +176,7 @@ TEST_F(GaloisFieldTest, AdditiveInverse) {
     EXPECT_EQ((a + inv).toInt(), 0);
 }
 
-TEST_F(GaloisFieldTest, MultiplicativeInverse) {
+TEST_F(GaloisFieldTests, MultiplicativeInverse) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -189,7 +189,7 @@ TEST_F(GaloisFieldTest, MultiplicativeInverse) {
     EXPECT_THROW(zero.multiplicativeInverse(), std::invalid_argument);
 }
 
-TEST_F(GaloisFieldTest, PowerOperation) {
+TEST_F(GaloisFieldTests, PowerOperation) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -203,7 +203,7 @@ TEST_F(GaloisFieldTest, PowerOperation) {
 }
 
 
-TEST_F(GaloisFieldTest, CopyAndAssignment) {
+TEST_F(GaloisFieldTests, CopyAndAssignment) {
     GaloisField::setPrime(7);
 
     GaloisField a = 3;
@@ -221,7 +221,7 @@ TEST_F(GaloisFieldTest, CopyAndAssignment) {
     EXPECT_EQ(c.toInt(), 3);
 }
 
-TEST_F(GaloisFieldTest, DifferentPrimes) {
+TEST_F(GaloisFieldTests, DifferentPrimes) {
     GaloisField::setPrime(11);
 
     GaloisField a = 7;
@@ -239,7 +239,7 @@ TEST_F(GaloisFieldTest, DifferentPrimes) {
     EXPECT_EQ(f.toInt(), 8);
 }
 
-TEST_F(GaloisFieldTest, LargeOperations) {
+TEST_F(GaloisFieldTests, LargeOperations) {
     GaloisField::setPrime(97);
 
     GaloisField a = 50;

@@ -6,7 +6,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-sign-compare -I$(SRC_DIR) -pthread
 # CXXFLAGS += -DENABLE_ALL_LOGGING
 LIBS = -lgtest_main -lgtest -pthread
 
-TEST_SOURCES := $(wildcard test_*.cpp)
+TEST_SOURCES := $(wildcard *Tests.cpp)
 
 SRC_SOURCES := $(filter-out $(SRC_DIR)/Emscripten.cpp, $(wildcard $(SRC_DIR)/*.cpp))
 

@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-class MonomialTest : public ::testing::Test {
+class MonomialTests : public ::testing::Test {
 protected:
     void SetUp() override {
         //  Common monomials used across multiple tests
@@ -83,25 +83,25 @@ protected:
     Monomial m8; //  a³b⁴c¹⁰d⁴
 };
 
-TEST_F(MonomialTest, DefaultConstructor) {
+TEST_F(MonomialTests, DefaultConstructor) {
     EXPECT_EQ(defaultMonomial.getDegree(), 0);
     EXPECT_EQ(defaultMonomial.getNumVariables(), 0);
     EXPECT_EQ(defaultMonomial.getVariables(), std::vector<char>{});
 }
 
-TEST_F(MonomialTest, NormalConstructor) {
+TEST_F(MonomialTests, NormalConstructor) {
     EXPECT_EQ(m1.getDegree(), 9);
     EXPECT_EQ(m1.getNumVariables(), 3);
     EXPECT_EQ(m1.getVariables(), (std::vector<char>{'x', 'y', 'z'}));
 }
 
-TEST_F(MonomialTest, RemoveZeroExponentsDuringConstructor) {
+TEST_F(MonomialTests, RemoveZeroExponentsDuringConstructor) {
     EXPECT_EQ(m5.getDegree(), 6);
     EXPECT_EQ(m5.getNumVariables(), 2);
     EXPECT_EQ(m5.getVariables(), (std::vector<char>{'b', 'x'}));
 }
 
-TEST_F(MonomialTest, ThrowErrorNegativeExponentsDuringConstructor) {
+TEST_F(MonomialTests, ThrowErrorNegativeExponentsDuringConstructor) {
     EXPECT_THROW(Monomial({
                      {'x', 2 },
                      {'a', -1},
@@ -110,33 +110,33 @@ TEST_F(MonomialTest, ThrowErrorNegativeExponentsDuringConstructor) {
                  std::invalid_argument);
 }
 
-TEST_F(MonomialTest, CopyConstructor) {
+TEST_F(MonomialTests, CopyConstructor) {
     Monomial n = Monomial(m1);
     EXPECT_EQ(n.getDegree(), 9);
     EXPECT_EQ(n.getNumVariables(), 3);
     EXPECT_EQ(n.getVariables(), (std::vector<char>{'x', 'y', 'z'}));
 }
 
-TEST_F(MonomialTest, GetExponent) {
+TEST_F(MonomialTests, GetExponent) {
     EXPECT_EQ(m1.getExponent('x'), 2);
     EXPECT_EQ(m1.getExponent('y'), 3);
     EXPECT_EQ(m1.getExponent('z'), 4);
     EXPECT_EQ(m1.getExponent('w'), 0);
 }
 
-TEST_F(MonomialTest, Equality) {
+TEST_F(MonomialTests, Equality) {
     EXPECT_EQ(m1, m3); //  Same monomial, different construction order
     EXPECT_NE(m1, m4); //  Different variables
 }
 
-TEST_F(MonomialTest, Comparison) {
+TEST_F(MonomialTests, Comparison) {
     EXPECT_GE(m2, m1);
     EXPECT_LE(m1, m2);
     EXPECT_GT(m2, m1);
     EXPECT_LT(m1, m2);
 }
 
-TEST_F(MonomialTest, MultiplicationSameVariables) {
+TEST_F(MonomialTests, MultiplicationSameVariables) {
     Monomial result = m1 * m2;
     Monomial expected = Monomial({
         {'x', 5 },
@@ -146,7 +146,7 @@ TEST_F(MonomialTest, MultiplicationSameVariables) {
     EXPECT_EQ(result, expected);
 }
 
-TEST_F(MonomialTest, MultiplicationDifferentVariables) {
+TEST_F(MonomialTests, MultiplicationDifferentVariables) {
     Monomial result = m1 * m6;
     Monomial expected = Monomial({
         {'x', 2},
@@ -158,7 +158,7 @@ TEST_F(MonomialTest, MultiplicationDifferentVariables) {
     EXPECT_EQ(result, expected);
 }
 
-TEST_F(MonomialTest, MultiplicationInPlaceSameVariables) {
+TEST_F(MonomialTests, MultiplicationInPlaceSameVariables) {
     Monomial temp = m1; //  Copy m1
     temp *= m2;
     Monomial expected = Monomial({
@@ -169,7 +169,7 @@ TEST_F(MonomialTest, MultiplicationInPlaceSameVariables) {
     EXPECT_EQ(temp, expected);
 }
 
-TEST_F(MonomialTest, MultiplicationInPlaceDifferentVariables) {
+TEST_F(MonomialTests, MultiplicationInPlaceDifferentVariables) {
     Monomial temp = m1; //  Copy m1
     temp *= m6;
     Monomial expected = Monomial({
@@ -182,7 +182,7 @@ TEST_F(MonomialTest, MultiplicationInPlaceDifferentVariables) {
     EXPECT_EQ(temp, expected);
 }
 
-TEST_F(MonomialTest, Division) {
+TEST_F(MonomialTests, Division) {
     Monomial result = m2 / m1;
     Monomial expected = Monomial({
         {'x', 1},
@@ -192,15 +192,15 @@ TEST_F(MonomialTest, Division) {
     EXPECT_EQ(result, expected);
 }
 
-TEST_F(MonomialTest, DivisionErrorHigherExponent) {
+TEST_F(MonomialTests, DivisionErrorHigherExponent) {
     EXPECT_EQ(m1 / m2, Monomial::null);
 }
 
-TEST_F(MonomialTest, DivisionErrorDifferentVariables) {
+TEST_F(MonomialTests, DivisionErrorDifferentVariables) {
     EXPECT_EQ(m1 / m6, Monomial::null);
 }
 
-TEST_F(MonomialTest, DivisionInPlace) {
+TEST_F(MonomialTests, DivisionInPlace) {
     Monomial temp = m2; //  Copy m2
     temp /= m1;
     Monomial expected = Monomial({
@@ -211,16 +211,16 @@ TEST_F(MonomialTest, DivisionInPlace) {
     EXPECT_EQ(temp, expected);
 }
 
-TEST_F(MonomialTest, DivisionInPlaceError) {
+TEST_F(MonomialTests, DivisionInPlaceError) {
     Monomial temp = m6; //  Copy m6
     EXPECT_EQ(temp /= m1, Monomial::null);
 }
 
-TEST_F(MonomialTest, ToString) {
+TEST_F(MonomialTests, ToString) {
     EXPECT_EQ(m7.toString(), "w⁴x²y³z");
 }
 
-TEST_F(MonomialTest, LeastCommonMultipleOverlappingVariables) {
+TEST_F(MonomialTests, LeastCommonMultipleOverlappingVariables) {
     Monomial result = Monomial::lcm(m7, m2);
     Monomial expected = Monomial({
         {'x', 3 },
@@ -231,7 +231,7 @@ TEST_F(MonomialTest, LeastCommonMultipleOverlappingVariables) {
     EXPECT_EQ(result, expected);
 }
 
-TEST_F(MonomialTest, LeastCommonMultipleNoOverlappingVariables) {
+TEST_F(MonomialTests, LeastCommonMultipleNoOverlappingVariables) {
     Monomial result = Monomial::lcm(m7, m8);
     Monomial expected = Monomial({
         {'x', 2 },

@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-class GroebnerBasisTest : public ::testing::Test {
+class GroebnerBasisTests : public ::testing::Test {
 protected:
     void SetUp() override {
         x = defineVariable<Rational>('x');
@@ -52,14 +52,14 @@ protected:
     std::unique_ptr<LexOrder> big_lexTXYZ;
 };
 
-TEST_F(GroebnerBasisTest, DefineVariable) {
+TEST_F(GroebnerBasisTests, DefineVariable) {
     MultivariatePolynomial<Rational> p({
         {Monomial(std::map<char, int>{{'x', 1}}), 1}
     });
     EXPECT_EQ(p, x);
 }
 
-TEST_F(GroebnerBasisTest, polynomialReduce1) {
+TEST_F(GroebnerBasisTests, polynomialReduce1) {
     auto f = (x ^ 3) + x * (y ^ 2) + 5;
     auto g1 = x * (y ^ 2) - 5;
     auto g2 = (x ^ 2) + 3 * (y ^ 2);
@@ -70,7 +70,7 @@ TEST_F(GroebnerBasisTest, polynomialReduce1) {
     EXPECT_EQ(r, -5);
 }
 
-TEST_F(GroebnerBasisTest, polynomialReduce2) {
+TEST_F(GroebnerBasisTests, polynomialReduce2) {
     auto f = (x ^ 2) * y + 1;
     auto g1 = x * y + 1;
     auto g2 = y + 1;
@@ -81,7 +81,7 @@ TEST_F(GroebnerBasisTest, polynomialReduce2) {
     EXPECT_EQ(r, -x + 1);
 }
 
-TEST_F(GroebnerBasisTest, polynomialReduce3) {
+TEST_F(GroebnerBasisTests, polynomialReduce3) {
     auto f = (x ^ 2) * y + x * (y ^ 2) + (y ^ 2);
     auto g1 = x * y - 1;
     auto g2 = (y ^ 2) - 1;
@@ -92,7 +92,7 @@ TEST_F(GroebnerBasisTest, polynomialReduce3) {
     EXPECT_EQ(r, x + y + 1);
 }
 
-TEST_F(GroebnerBasisTest, polynomialReduce4) {
+TEST_F(GroebnerBasisTests, polynomialReduce4) {
     auto f = (x ^ 2) * y + 1;
     auto g1 = y + 1;
     auto g2 = x * y + 1;
@@ -103,7 +103,7 @@ TEST_F(GroebnerBasisTest, polynomialReduce4) {
     EXPECT_EQ(r, -(x ^ 2) + 1);
 }
 
-TEST_F(GroebnerBasisTest, polynomialReduce5) {
+TEST_F(GroebnerBasisTests, polynomialReduce5) {
     auto f = (x ^ 5) + (y ^ 5) + (z ^ 5) - 1;
     auto g1 = (x ^ 4) + y + z;
     auto g2 = (x ^ 2) + (y ^ 2) + (z ^ 2);
@@ -116,7 +116,7 @@ TEST_F(GroebnerBasisTest, polynomialReduce5) {
     EXPECT_EQ(r, (y ^ 5) + (z ^ 5) + (y ^ 4) + (z ^ 4) + (y ^ 3) * z + y * (z ^ 3) - 1);
 }
 
-TEST_F(GroebnerBasisTest, GroebnerBasis1) {
+TEST_F(GroebnerBasisTests, GroebnerBasis1) {
     auto f1 = (x ^ 3) - 2 * x * y;
     auto f2 = (x ^ 2) * y - 2 * (y ^ 2) + x;
     std::vector<MultivariatePolynomial<Rational>> F = {f1, f2};
@@ -131,7 +131,7 @@ TEST_F(GroebnerBasisTest, GroebnerBasis1) {
     EXPECT_TRUE(std::find(G.begin(), G.end(), g3) != G.end());
 }
 
-TEST_F(GroebnerBasisTest, GroebnerBasis2) {
+TEST_F(GroebnerBasisTests, GroebnerBasis2) {
     auto f1 = x + y + z - 1;
     auto f2 = (x ^ 2) + (y ^ 2) + (z ^ 2) - 3;
     auto f3 = (x ^ 3) + (y ^ 3) + (z ^ 3) - 4;
@@ -147,7 +147,7 @@ TEST_F(GroebnerBasisTest, GroebnerBasis2) {
     EXPECT_TRUE(std::find(G.begin(), G.end(), g3) != G.end());
 }
 
-TEST_F(GroebnerBasisTest, GroebnerBasis3) {
+TEST_F(GroebnerBasisTests, GroebnerBasis3) {
     auto f1 = 3 * u + 3 * u * v * v - u * u * u - x;
     auto f2 = 3 * v + 3 * u * u * v - v * v * v - y;
     auto f3 = 3 * u * u - 3 * v * v - z;
@@ -168,7 +168,7 @@ TEST_F(GroebnerBasisTest, GroebnerBasis3) {
     EXPECT_TRUE(std::find(G.begin(), G.end(), g) != G.end());
 }
 
-TEST_F(GroebnerBasisTest, GroebnerBasis4) {
+TEST_F(GroebnerBasisTests, GroebnerBasis4) {
     auto f1 = t + u - x;
     auto f2 = (t ^ 2) + 2 * t * u - y;
     auto f3 = (t ^ 3) + 3 * (t ^ 2) * u - z;
@@ -182,7 +182,7 @@ TEST_F(GroebnerBasisTest, GroebnerBasis4) {
     EXPECT_TRUE(std::find(G.begin(), G.end(), g) != G.end());
 }
 
-TEST_F(GroebnerBasisTest, GroebnerBasis5) {
+TEST_F(GroebnerBasisTests, GroebnerBasis5) {
     auto f1 = (z ^ 2) * y + (z ^ 2);
     auto f2 = (x ^ 3) * y + x + y + 1;
     auto f3 = z + (x ^ 2) + (y ^ 3);
@@ -207,7 +207,7 @@ TEST_F(GroebnerBasisTest, GroebnerBasis5) {
     EXPECT_TRUE(std::find(G.begin(), G.end(), g6) != G.end());
 }
 
-TEST_F(GroebnerBasisTest, GroebnerBasis6) {
+TEST_F(GroebnerBasisTests, GroebnerBasis6) {
     auto f1 = 3 * (X ^ 2) + 2 * Y * Z - 2 * X * T;
     auto f2 = 2 * X * Z - 2 * Y * T;
     auto f3 = 2 * X * Y - 2 * Z - 2 * Z * T;

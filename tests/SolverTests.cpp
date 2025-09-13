@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <vector>
 
-class RootFindersTest : public ::testing::Test {
+class SolverTests : public ::testing::Test {
 protected:
     static void SetUpTestSuite() {
         GaloisField::setPrime(7);
@@ -54,7 +54,7 @@ protected:
     MultivariatePolynomial<BigRational> T;
 };
 
-TEST_F(RootFindersTest, SolveSystemInconsistent) {
+TEST_F(SolverTests, SolveSystemInconsistent) {
     auto f1 = x + y - 3'333;
     auto f2 = x + y - 4'444;
     auto _ = solveSystem<Rational>({f1, f2}, findRationalRoots);
@@ -63,7 +63,7 @@ TEST_F(RootFindersTest, SolveSystemInconsistent) {
     EXPECT_EQ(std::get<std::string>(_), "No solution exist in any field extension");
 }
 
-TEST_F(RootFindersTest, SolveSystemEmpty) {
+TEST_F(SolverTests, SolveSystemEmpty) {
     std::vector<MultivariatePolynomial<Rational>> emptySystem;
     auto _ = solveSystem<Rational>(emptySystem, findRationalRoots);
 
@@ -71,7 +71,7 @@ TEST_F(RootFindersTest, SolveSystemEmpty) {
     EXPECT_EQ(std::get<std::string>(_), "Empty system is not allowed");
 }
 
-TEST_F(RootFindersTest, CharacteristicEquationsInconsistentSystem) {
+TEST_F(SolverTests, CharacteristicEquationsInconsistentSystem) {
     auto f1 = x + y - 1;
     auto f2 = x + y - 11;
     std::map<char, MultivariatePolynomial<Rational>> charEqs1 =
@@ -85,7 +85,7 @@ TEST_F(RootFindersTest, CharacteristicEquationsInconsistentSystem) {
     EXPECT_TRUE(charEqs2.empty());
 }
 
-TEST_F(RootFindersTest, CharacteristicEquationsSingleVariable) {
+TEST_F(SolverTests, CharacteristicEquationsSingleVariable) {
     std::vector<MultivariatePolynomial<Rational>> singleVarSystem;
     singleVarSystem.push_back(3 * (x ^ 99) + 1);
 
@@ -95,7 +95,7 @@ TEST_F(RootFindersTest, CharacteristicEquationsSingleVariable) {
     EXPECT_TRUE(charEqs.find('x') != charEqs.end());
 }
 
-TEST_F(RootFindersTest, EdgeCaseConstantPolynomial) {
+TEST_F(SolverTests, EdgeCaseConstantPolynomial) {
     MultivariatePolynomial<Rational> constantPoly = Rational(5);
 
     std::vector<MultivariatePolynomial<Rational>> constantSystem;
@@ -107,7 +107,7 @@ TEST_F(RootFindersTest, EdgeCaseConstantPolynomial) {
     EXPECT_EQ(std::get<std::string>(_), "No solution exist in any field extension");
 }
 
-TEST_F(RootFindersTest, TwoVar1Eq) {
+TEST_F(SolverTests, TwoVar1Eq) {
     auto f = x * x + y * y;
     auto solution = solveSystem<Rational>({f}, findRationalRoots);
     auto charEqs = characteristicEquations<Rational>({f});
@@ -116,7 +116,7 @@ TEST_F(RootFindersTest, TwoVar1Eq) {
     EXPECT_EQ(charEqs.size(), 0);
 }
 
-TEST_F(RootFindersTest, OneUselessEq) {
+TEST_F(SolverTests, OneUselessEq) {
     auto f1 = x + y;
     auto f2 = 2 * f1;
     auto f3 = x - y + 77;
@@ -130,7 +130,7 @@ TEST_F(RootFindersTest, OneUselessEq) {
     EXPECT_TRUE(charEqs.find('y') != charEqs.end());
 }
 
-TEST_F(RootFindersTest, CharacteristicEquationsFiniteField7) {
+TEST_F(SolverTests, CharacteristicEquationsFiniteField7) {
     GaloisField::setPrime(7);
     auto a = defineVariable<GaloisField>('a');
     auto b = defineVariable<GaloisField>('b');
@@ -143,7 +143,7 @@ TEST_F(RootFindersTest, CharacteristicEquationsFiniteField7) {
     EXPECT_EQ(2, charEqs.size());
 }
 
-TEST_F(RootFindersTest, OneMoreEqButSolvable) {
+TEST_F(SolverTests, OneMoreEqButSolvable) {
     auto f1 = x + y;
     auto f2 = 2 * x + 2 * y;
     auto f3 = x * y + 9;
@@ -154,7 +154,7 @@ TEST_F(RootFindersTest, OneMoreEqButSolvable) {
     EXPECT_EQ(solution.size(), 2);
 }
 
-TEST_F(RootFindersTest, Mod2) {
+TEST_F(SolverTests, Mod2) {
     GaloisField::setPrime(2);
     auto f1 = a + b - 1;
     auto f2 = a * a + 1;
@@ -166,7 +166,7 @@ TEST_F(RootFindersTest, Mod2) {
     EXPECT_TRUE(charEq['b'] == b * b);
 }
 
-TEST_F(RootFindersTest, Mod2Eq) {
+TEST_F(SolverTests, Mod2Eq) {
     GaloisField::setPrime(2);
     auto f1 = a + 1;
     auto f2 = (a ^ 5) + b;
@@ -178,7 +178,7 @@ TEST_F(RootFindersTest, Mod2Eq) {
     EXPECT_EQ(solution[0]['b'], 1);
 }
 
-TEST_F(RootFindersTest, PhiCichon) {
+TEST_F(SolverTests, PhiCichon) {
     auto f1 = u + v + t - 1;
     auto f2 = (u ^ 2) + (v ^ 2) + (t ^ 2) - 3;
     auto f3 = (u ^ 3) + (v ^ 3) + (t ^ 3) - 4;
@@ -198,7 +198,7 @@ TEST_F(RootFindersTest, PhiCichon) {
     }
 }
 
-TEST_F(RootFindersTest, IVAPage100) {
+TEST_F(SolverTests, IVAPage100) {
     auto f1 = 3 * (X ^ 2) + 2 * Y * Z - 2 * X * T;
     auto f2 = 2 * X * Z - 2 * Y * T;
     auto f3 = 2 * X * Y - 2 * Z - 2 * Z * T;
@@ -268,7 +268,7 @@ TEST_F(RootFindersTest, IVAPage100) {
     EXPECT_TRUE(std::find(solution.begin(), solution.end(), sol8) != solution.end());
 }
 
-TEST_F(RootFindersTest, TwoAndFive) {
+TEST_F(SolverTests, TwoAndFive) {
     auto f1 = (X ^ 2) + (Y ^ 2) - 5;
     auto f2 = (X ^ 5) + (Y ^ 5) - 33;
 
