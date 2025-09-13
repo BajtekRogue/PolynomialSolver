@@ -1,4 +1,4 @@
-import { getModule, getParsedPolynomials } from '../main.js';
+import { getModule, getParsedPolynomials } from './appMain.js';
 import { validateInput} from './utils.js';
 import { createStringVector } from './utils.js';
 

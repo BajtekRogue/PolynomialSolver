@@ -1,4 +1,4 @@
-import { getModule } from './main.js';
+import { getModule } from './appMain.js';
 import { isPrime } from './fieldSelection.js';
 
 export function createStringVector(strings) {

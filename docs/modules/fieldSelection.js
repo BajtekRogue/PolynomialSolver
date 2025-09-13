@@ -1,4 +1,4 @@
-import { getParsedPolynomials } from './main.js';
+import { getParsedPolynomials } from './appMain.js';
 import { displayPolynomials } from './polynomialParser.js';
 
 export function initializeFieldSelection() {

@@ -1,9 +1,9 @@
-import { setModule, getParsedPolynomials } from './main.js';
+import { setModule, getParsedPolynomials } from './appMain.js';
 import { displayPolynomials } from './polynomialParser.js';
 
 export async function loadWebAssemblyModule() {
     try {
-        const moduleFactory = await import('/build/main.js');
+        const moduleFactory = await import('./appMain.js');
         
         let factory;
         if (typeof moduleFactory.SolverModule === 'function') {
@@ -50,13 +50,13 @@ export async function loadWebAssemblyModule() {
 
 function loadViaScriptTag() {
     return new Promise((resolve, reject) => {
-        const existingScript = document.querySelector('script[src*="main.js"]');
+        const existingScript = document.querySelector('script[src*="modules/main.js"]');
         if (existingScript) {
             existingScript.remove();
         }
         
         const script = document.createElement('script');
-        script.src = '/build/main.js';
+        script.src = './main.js';
         script.onload = async () => {
             try {
                 await new Promise(resolve => setTimeout(resolve, 100));
