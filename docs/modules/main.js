@@ -1,8 +1,8 @@
-import { loadWebAssemblyModule} from './modules/webassembly.js';
-import { initializeFieldSelection } from './modules/fieldSelection.js';
-import { parsePolynomials } from './modules/polynomialParser.js';
-import { solve } from './modules/solver.js';
-import { copyResults } from './modules/utils.js';
+import { loadWebAssemblyModule} from './webassembly.js';
+import { initializeFieldSelection } from './fieldSelection.js';
+import { parsePolynomials } from './polynomialParser.js';
+import { solve } from './solver.js';
+import { copyResults } from './utils.js';
 
 export let Module = null;
 export let parsedPolynomials = [];

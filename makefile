@@ -1,6 +1,6 @@
 EMCC = em++
-SRC_DIR = src/cpp
-OUT_DIR = build
+SRC_DIR = src
+OUT_DIR = docs
 TARGET = $(OUT_DIR)/main.js
 
 CPPFLAGS = -I$(SRC_DIR) 

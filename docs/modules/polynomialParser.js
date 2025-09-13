@@ -1,4 +1,4 @@
-import { getModule, setParsedPolynomials } from '../main.js';
+import { getModule, setParsedPolynomials } from './main.js';
 import { isPrime } from './fieldSelection.js';
 import { createStringVector } from './utils.js';
 

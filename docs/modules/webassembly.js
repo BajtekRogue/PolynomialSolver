@@ -1,4 +1,4 @@
-import { setModule, getParsedPolynomials } from '../main.js';
+import { setModule, getParsedPolynomials } from './main.js';
 import { displayPolynomials } from './polynomialParser.js';
 
 export async function loadWebAssemblyModule() {
