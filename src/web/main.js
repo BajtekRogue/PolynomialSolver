@@ -31,3 +31,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFieldSelection();
     loadWebAssemblyModule();
 });
+
+const worker = new Worker('./modules/worker.js', { type: 'module' });

@@ -1,22 +1,17 @@
+#include "BigRational.hpp"
 #include "GaloisField.hpp"
 #include "GroebnerBasis.hpp"
 #include "Monomial.hpp"
 #include "MonomialOrders.hpp"
 #include "MultivariatePolynomial.hpp"
-#include "Rational.hpp"
 #include "Solver.hpp"
 #include "UnivariatePolynomial.hpp"
-#include "BigRational.hpp"
 
 #include <algorithm>
 #include <emscripten/bind.h>
 
+using BigInt = boost::multiprecision::cpp_int;
 using namespace emscripten;
-
-
-#ifdef USE_BIG_RATIONAL_TYPE
-using Rational = BigRational;
-#endif
 
 template<typename F> struct SystemResult {
     bool success = false;
@@ -25,22 +20,29 @@ template<typename F> struct SystemResult {
     std::vector<std::string> variables;
 };
 
-using SystemResult__Rational = SystemResult<Rational>;
+using SystemResult__Rational = SystemResult<BigRational>;
 using SystemResult__GaloisField = SystemResult<GaloisField>;
 using SystemResult__Real = SystemResult<Real>;
 
-std::string
-    printCharacteristicEquations__Rational(const std::vector<MultivariatePolynomial<Rational>>& X) {
+std::string printCharacteristicEquations__Rational(
+    const std::vector<MultivariatePolynomial<BigRational>>& X) {
 
     auto solution = characteristicEquations(X);
     if (solution.empty()) {
         return "No solutions found";
     }
 
+    auto lcm = [](const BigInt& a, const BigInt& b) -> BigInt {
+        if (a == 0 || b == 0) {
+            return BigInt(0);
+        }
+        return boost::multiprecision::abs(a * b) / boost::multiprecision::gcd(a, b);
+    };
+
     for (auto& [var, f] : solution) {
-        int64_t lcm_denominators = 1;
+        BigInt lcm_denominators = 1;
         for (const auto& [monomial, coeff] : f.getCoefficients()) {
-            lcm_denominators = std::lcm(lcm_denominators, coeff.getDenominator());
+            lcm_denominators = lcm(lcm_denominators, coeff.getDenominator());
         }
         f *= lcm_denominators;
     }
@@ -59,11 +61,12 @@ std::string printCharacteristicEquations__Real(const std::vector<MultivariatePol
     return solution.empty() ? "No solutions found" : printCharacteristicEquations(solution);
 }
 
-std::string printSystemSolution__Rational(const std::vector<MultivariatePolynomial<Rational>>& X) {
-    auto solution = solveSystem<Rational>(X, findRationalRoots);
+std::string
+    printSystemSolution__Rational(const std::vector<MultivariatePolynomial<BigRational>>& X) {
+    auto solution = solveSystem<BigRational>(X, findBigRationalRoots);
     return std::holds_alternative<std::string>(solution) ?
                std::get<std::string>(solution) :
-               printSolutions(std::get<std::vector<std::map<char, Rational>>>(solution));
+               printSolutions(std::get<std::vector<std::map<char, BigRational>>>(solution));
 }
 
 std::string
@@ -88,7 +91,8 @@ SystemResult__Rational
 
     for (int i = 0; i < polyStrings.size(); ++i) {
         try {
-            MultivariatePolynomial<Rational> f = MultivariatePolynomial<Rational>(polyStrings[i]);
+            MultivariatePolynomial<BigRational> f =
+                MultivariatePolynomial<BigRational>(polyStrings[i]);
 
             if (f.isZeroPolynomial()) {
                 continue;
@@ -191,7 +195,7 @@ SystemResult__Real buildSystemFromStrings__Real(const std::vector<std::string>& 
 
 std::string inputStringToBetterString__Rational(const std::string& polyStr) {
     try {
-        MultivariatePolynomial<Rational> f = MultivariatePolynomial<Rational>(polyStr);
+        MultivariatePolynomial<BigRational> f = MultivariatePolynomial<BigRational>(polyStr);
         return f.toString();
     }
     catch (const std::exception& e) {
@@ -238,8 +242,8 @@ EMSCRIPTEN_BINDINGS(polynomial_solver) {
         .field("polynomials", &SystemResult__Real::polynomials)
         .field("variables", &SystemResult__Real::variables);
 
-    class_<MultivariatePolynomial<Rational>>("MultivariatePolynomial__Rational")
-        .function("toString", &MultivariatePolynomial<Rational>::toString);
+    class_<MultivariatePolynomial<BigRational>>("MultivariatePolynomial__Rational")
+        .function("toString", &MultivariatePolynomial<BigRational>::toString);
 
     class_<MultivariatePolynomial<GaloisField>>("MultivariatePolynomial__GaloisField")
         .function("toString", &MultivariatePolynomial<GaloisField>::toString);
@@ -247,7 +251,7 @@ EMSCRIPTEN_BINDINGS(polynomial_solver) {
     class_<MultivariatePolynomial<Real>>("MultivariatePolynomial__Real")
         .function("toString", &MultivariatePolynomial<Real>::toString);
 
-    register_vector<MultivariatePolynomial<Rational>>("PolynomialVector__Rational");
+    register_vector<MultivariatePolynomial<BigRational>>("PolynomialVector__Rational");
     register_vector<MultivariatePolynomial<GaloisField>>("PolynomialVector__GaloisField");
     register_vector<MultivariatePolynomial<Real>>("PolynomialVector__Real");
     register_vector<std::string>("StringVector");

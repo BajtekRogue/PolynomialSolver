@@ -157,7 +157,7 @@ export function displayPolynomials(polynomials) {
             className += ' error';
         }
         
-        const mathDisplayPoly = `\\(g_{${index + 1}}(${variables.join(', ')})=${displayPoly}\\)`;
+        const mathDisplayPoly = `\\(\\wp_{${index + 1}}(${variables.join(', ')})=${displayPoly}\\)`;
         html += `<div class="${className}">
             <em class="math-expression">${mathDisplayPoly}</em>${status}
         </div>`;

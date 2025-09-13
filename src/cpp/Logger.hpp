@@ -7,6 +7,7 @@
 
 class Logger {
 public:
+
 //  Global disable flag - overrides individual settings
 #ifdef ENABLE_ALL_LOGGING
     #define ENABLE_GROEBNER_LOGGING 1
@@ -17,15 +18,15 @@ public:
 
 //  Default values if not specified by compiler flags
 #ifndef ENABLE_GROEBNER_LOGGING
-    #define ENABLE_GROEBNER_LOGGING 0
+    #define ENABLE_GROEBNER_LOGGING 1
 #endif
 
 #ifndef ENABLE_SOLVER_LOGGING
-    #define ENABLE_SOLVER_LOGGING 0
+    #define ENABLE_SOLVER_LOGGING 1
 #endif
 
 #ifndef ENABLE_CHARACTERISTIC_LOGGING
-    #define ENABLE_CHARACTERISTIC_LOGGING 0
+    #define ENABLE_CHARACTERISTIC_LOGGING 1
 #endif
 
 #ifndef ENABLE_PROGRESS_BAR

@@ -31,7 +31,7 @@ TEST_F(RationalTest, Constructor) {
     EXPECT_EQ(d.getNumerator(), 1);
     EXPECT_EQ(d.getDenominator(), 3);
 
-    Rational e("1234");
+    Rational e("+1234");
     EXPECT_EQ(e.getNumerator(), 1'234);
     EXPECT_EQ(e.getDenominator(), 1);
 
@@ -39,7 +39,7 @@ TEST_F(RationalTest, Constructor) {
     EXPECT_EQ(f.getNumerator(), -1'234);
     EXPECT_EQ(f.getDenominator(), 1);
 
-    Rational g("123/91");
+    Rational g("+123/91");
     EXPECT_EQ(g.getNumerator(), 123);
     EXPECT_EQ(g.getDenominator(), 91);
 

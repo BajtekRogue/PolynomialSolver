@@ -36,7 +36,7 @@ public:
         size_t slashPos = str.find('/');
         try {
             if (slashPos == std::string::npos) {
-                _numerator = BigInt(str);
+                _numerator = str.front() == '+' ? BigInt(str.substr(1)) : BigInt(str);
                 _denominator = 1;
             }
             else {
@@ -47,7 +47,8 @@ public:
                     throw std::invalid_argument("Denominator contains + or -");
                 }
 
-                _numerator = BigInt(numeratorStr);
+                _numerator =
+                    str.front() == '+' ? BigInt(numeratorStr.substr(1)) : BigInt(numeratorStr);
                 _denominator = BigInt(denominatorStr);
 
                 if (_denominator == 0) {
@@ -57,7 +58,7 @@ public:
             }
         }
         catch (const std::exception& e) {
-            throw std::invalid_argument("Invalid rational number format");
+            throw std::invalid_argument(std::string("Invalid rational number format: ") + e.what());
         }
     }
 
@@ -97,7 +98,7 @@ public:
         BigInt num2 = other._numerator / gcd2;
         BigInt den2 = other._denominator / gcd1;
 
-        return BigRational(num1 * num2, den1 * den2, false); 
+        return BigRational(num1 * num2, den1 * den2, false);
     }
 
     BigRational operator/(const BigRational& other) const override {
@@ -160,7 +161,7 @@ public:
     }
 
     BigRational operator-() const override {
-        return BigRational(-_numerator, _denominator, false); 
+        return BigRational(-_numerator, _denominator, false);
     }
 
     bool operator==(const BigRational& other) const override {
@@ -203,7 +204,7 @@ public:
         return !(*this < other);
     }
 
-    BigRational& operator=(const BigRational& other) = default;
+    BigRational& operator=(const BigRational& other) override = default;
 
     BigRational additiveInverse() const override {
         return -(*this);

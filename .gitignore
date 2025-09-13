@@ -1,7 +1,5 @@
 .vscode
-oldCode
-emsdk
-
+./tests/build
 *.exe
 *.dll
 *.so

@@ -16,8 +16,6 @@
 template<typename F> class MultivariatePolynomial {
     static_assert(std::is_base_of_v<Field<F>, F>, "F must be derived from Field<F>");
 
-    /* If you want to try hash maps follows:
-     * https://claude.ai/chat/d9eab463-d199-40be-a684-13a3a696831c */
 
 public:
     MultivariatePolynomial() { }

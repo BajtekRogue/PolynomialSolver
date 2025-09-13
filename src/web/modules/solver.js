@@ -265,7 +265,7 @@ function displayResults(calculationResult, operation, polynomials) {
             console.warn('Failed to format polynomial:', error);
         }
         
-        const mathDisplayPoly = `\\(g_{${index + 1}}(${calculationResult.variables.join(', ')})=${displayPoly}\\)`;
+        const mathDisplayPoly = `\\(\\wp_{${index + 1}}(${calculationResult.variables.join(', ')}) = ${displayPoly}\\)`;
         result += `<div class="polynomial-item">
             <em class="math-expression">${mathDisplayPoly}</em>
         </div>`;

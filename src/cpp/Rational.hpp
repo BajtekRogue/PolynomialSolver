@@ -210,7 +210,7 @@ public:
         return !(*this < other);
     }
 
-    Rational& operator=(const Rational& other) = default;
+    Rational& operator=(const Rational& other) override = default;
 
     Rational additiveInverse() const override {
         return -(*this);
